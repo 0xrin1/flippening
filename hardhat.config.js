@@ -31,6 +31,14 @@ module.exports = {
             accounts: [
                 process.env.TEST_PRIV_KEY,
             ],
+            harfork: 'london',
+        },
+        local: {
+            url: process.env.LOCAL_RPC_URL,
+            accounts: [
+                process.env.LOCAL_PRIV_KEY,
+            ],
+            hardfork: 'london',
         },
     },
 };

@@ -15,17 +15,12 @@ async function main() {
     // await hre.run('compile');
 
     // We get the contract to deploy
-    const Flippening = await hre.ethers.getContractFactory('Flippening');
-    const flippening = await Flippening.deploy(
-        process.env.TEST_OWNER,
-        // process.env.LOCAL_OWNER,
-        60,
-        60,
-    );
+    const ERC20 = await hre.ethers.getContractFactory('ERC20Basic');
+    const tokenContract = await ERC20.deploy();
 
-    await flippening.deployed();
+    await tokenContract.deployed();
 
-    console.log('Flippening deployed to:', flippening.address);
+    console.log('ERC20 deployed to:', tokenContract.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
