@@ -56,11 +56,17 @@ contract Flippening {
         _;
     }
 
+    /**
+     * @dev Throws if flip expiration has passed.
+     */
     modifier notExpired(uint id) {
         require(!isExpired(id), 'Expiration has passed');
         _;
     }
 
+    /**
+     * @dev Throws if guess is not either 'true' or 'false'.
+     */
     modifier validGuess(string memory guessString) {
         strings.slice memory guessSlice = guessString.toSlice();
         int256 guessTrue = guessSlice.compare('true'.toSlice());
@@ -69,28 +75,43 @@ contract Flippening {
         _;
     }
 
+    /**
+     * @dev Throws if guess is not either 'true' or 'false'.
+     */
     modifier noGuess(uint id) {
         require(flips[id].guesser == payable(address(0)), 'Flip already has guess');
         _;
     }
 
+    /**
+     * @dev Throws if flip does not have a guess..
+     */
     modifier hasGuess(uint id) {
         require(flips[id].guesser != payable(address(0)), 'Flip needs guess');
         _;
     }
 
+    /**
+     * @dev Throws if provided secret is wrong.
+     */
     modifier correctSecret(uint id, string memory clearSecretString) {
         bytes32 clearSecretBytes = sha256(abi.encodePacked(clearSecretString));
         require(clearSecretBytes == flips[id].secret, 'Secret is wrong');
         _;
     }
 
+    /**
+     * @dev Throws if expiration and gracetime has not passed.
+     */
     modifier gracePassed(uint id) {
         // Check that expired && graceTime passed.
         require(isPastGrace(id), 'Expiration + gracetime has not passed');
         _;
     }
 
+    /**
+     * @dev Throws if flip has already been setled.
+     */
     modifier notSettled(uint id) {
         // Check that expired && graceTime passed.
         require(flips[id].settled == false, 'Flip already settled');
