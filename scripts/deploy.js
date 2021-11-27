@@ -17,8 +17,8 @@ async function main() {
     // We get the contract to deploy
     const Flippening = await hre.ethers.getContractFactory('Flippening');
     const flippening = await Flippening.deploy(
-        process.env.TEST_OWNER,
-        // process.env.LOCAL_OWNER,
+        // process.env.TEST_OWNER,
+        process.env.LOCAL_OWNER,
         60,
         60,
     );
