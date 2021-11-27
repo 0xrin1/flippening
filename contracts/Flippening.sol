@@ -154,23 +154,12 @@ contract Flippening {
         uint id,
         string memory guessString
     ) public payable noGuess(id) notExpired(id) validGuess(guessString) {
-        console.log('msg.sender', msg.sender);
-
-        console.log('guessString', guessString);
-
         flips[id].guesser = payable(msg.sender);
         flips[id].guess = guessString;
 
-        console.log('id', id);
-        console.log('token', flips[id].token);
-
         IERC20 token = IERC20(flips[id].token);
 
-        console.log('amount', flips[id].amount);
-
         token.transferFrom(msg.sender, address(this), flips[id].amount);
-
-        console.log('d');
 
         emit Guessed(id, msg.sender, guessString);
     }
