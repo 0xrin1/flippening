@@ -34,7 +34,7 @@ contract Flippening {
 
     event Created(
         uint indexed index,
-        address indexed proposer,
+        address indexed creator,
         address indexed token,
         uint amount
     );
