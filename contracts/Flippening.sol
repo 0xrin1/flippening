@@ -39,7 +39,7 @@ contract Flippening {
         uint amount
     );
 
-    event Guessed(uint indexed index, address indexed guesser, string indexed guess);
+    event Guessed(uint indexed index, address indexed guesser, string indexed filterGuess, string guess);
 
     event Settled(uint indexed index, address indexed settler, bool indexed creatorWon);
 
@@ -161,7 +161,7 @@ contract Flippening {
 
         token.transferFrom(msg.sender, address(this), flips[id].amount);
 
-        emit Guessed(id, msg.sender, guessString);
+        emit Guessed(id, msg.sender, guessString, guessString);
     }
 
     /// Extract the secret in string format from the provided clearText secret.
