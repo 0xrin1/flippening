@@ -26,8 +26,15 @@ module.exports = {
         }
     },
     networks: {
-        testnet: {
-            url: process.env.TEST_RPC_URL,
+        testnet_bsc: {
+            url: process.env.BSC_TEST_RPC_URL,
+            accounts: [
+                process.env.TEST_PRIV_KEY,
+            ],
+            harfork: 'london',
+        },
+        testnet_arb: {
+            url: process.env.ARB_TEST_RPC_URL,
             accounts: [
                 process.env.TEST_PRIV_KEY,
             ],
