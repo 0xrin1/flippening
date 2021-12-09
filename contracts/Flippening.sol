@@ -209,7 +209,7 @@ contract Flippening {
             fundsReceiver = flips[id].guesser;
         }
 
-        token.transfer(fundsReceiver, flips[id].amount);
+        token.transfer(fundsReceiver, winAmount(id));
 
         flips[id].settled = true;
 
@@ -260,7 +260,7 @@ contract Flippening {
     function winAmount(uint id) private view returns (uint) {
         uint rewardAmount = guessReward(id);
 
-        return flips[id].amount.sub(rewardAmount);
+        return flips[id].amount.mul(2).sub(rewardAmount);
     }
 
     /// Is given flip expired?

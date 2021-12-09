@@ -37,8 +37,8 @@ describe('guess', function () {
             );
 
             await expect(flippening.guess(counter, choice))
-                .to.emit(flippening, 'Guessed')
-                .withArgs(counter, owner.address, choice);
+                .to.emit(flippening, 'Guess')
+                .withArgs(counter, owner.address, choice, choice);
 
             counter += 1;
         }
