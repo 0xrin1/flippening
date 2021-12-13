@@ -40,6 +40,13 @@ module.exports = {
             ],
             harfork: 'london',
         },
+        testnet_ava: {
+            url: process.env.AVA_TEST_RPC_URL,
+            accounts: [
+                process.env.TEST_PRIV_KEY,
+            ],
+            harfork: 'london',
+        },
         local: {
             url: process.env.LOCAL_RPC_URL,
             accounts: [
