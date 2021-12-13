@@ -1,5 +1,4 @@
 const { expect } = require('chai');
-const crypto = require('crypto');
 const { sha256, randomSecretWord } = require('./base/helpers');
 
 describe('settle', function () {
