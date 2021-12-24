@@ -1,5 +1,3 @@
-//SPDX-License-Identifier: Unlicense
-
 /*
  * @title String & slice utility library for Solidity contracts.
  * @author Nick Johnson <arachnid@notdot.net>
@@ -36,7 +34,7 @@
  *      corresponding to the left and right parts of the string.
  */
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.6.12;
 
 library strings {
     struct slice {
@@ -44,9 +42,9 @@ library strings {
         uint _ptr;
     }
 
-    function memcpy(uint dest, uint src, uint leng) private pure {
+    function memcpy(uint dest, uint src, uint len) private pure {
         // Copy word-length chunks while possible
-        for(; leng >= 32; leng -= 32) {
+        for(; len >= 32; len -= 32) {
             assembly {
                 mstore(dest, mload(src))
             }
@@ -55,7 +53,7 @@ library strings {
         }
 
         // Copy remaining bytes
-        uint mask = 256 ** (32 - leng) - 1;
+        uint mask = 256 ** (32 - len) - 1;
         assembly {
             let srcpart := and(mload(src), not(mask))
             let destpart := and(mload(dest), mask)
@@ -74,55 +72,6 @@ library strings {
             ptr := add(self, 0x20)
         }
         return slice(bytes(self).length, ptr);
-    }
-
-    /*
-     * @dev Returns the length of a null-terminated bytes32 string.
-     * @param self The value to find the length of.
-     * @return The length of the string, from 0 to 32.
-     */
-    function len(bytes32 self) internal pure returns (uint) {
-        uint ret;
-        if (self == 0)
-            return 0;
-        if (uint(self) & 0xffffffffffffffffffffffffffffffff == 0) {
-            ret += 16;
-            self = bytes32(uint(self) / 0x100000000000000000000000000000000);
-        }
-        if (uint(self) & 0xffffffffffffffff == 0) {
-            ret += 8;
-            self = bytes32(uint(self) / 0x10000000000000000);
-        }
-        if (uint(self) & 0xffffffff == 0) {
-            ret += 4;
-            self = bytes32(uint(self) / 0x100000000);
-        }
-        if (uint(self) & 0xffff == 0) {
-            ret += 2;
-            self = bytes32(uint(self) / 0x10000);
-        }
-        if (uint(self) & 0xff == 0) {
-            ret += 1;
-        }
-        return 32 - ret;
-    }
-
-    /*
-     * @dev Returns a slice containing the entire bytes32, interpreted as a
-     *      null-terminated utf-8 string.
-     * @param self The bytes32 value to convert to a slice.
-     * @return A new slice containing the value of the input argument up to the
-     *         first null.
-     */
-    function toSliceB32(bytes32 self) internal pure returns (slice memory ret) {
-        // Allocate space for `self` in memory, copy it there, and point ret at it
-        assembly {
-            let ptr := mload(0x40)
-            mstore(0x40, add(ptr, 0x20))
-            mstore(ptr, self)
-            mstore(add(ret, 0x20), ptr)
-        }
-        ret._len = len(self);
     }
 
     /*
@@ -156,7 +105,7 @@ library strings {
      * @param self The slice to operate on.
      * @return The length of the slice in runes.
      */
-    function sliceLength(slice memory self) internal pure returns (uint l) {
+    function len(slice memory self) internal pure returns (uint l) {
         // Starting at ptr-31 means the LSB will be the byte we care about
         uint ptr = self._ptr - 31;
         uint end = ptr + self._len;
@@ -213,15 +162,13 @@ library strings {
             }
             if (a != b) {
                 // Mask out irrelevant bytes and check again
-                uint256 mask = type(uint256).max; // 0xffff...
+                uint256 mask = uint256(-1); // 0xffff...
                 if(shortest < 32) {
                   mask = ~(2 ** (8 * (32 - shortest + idx)) - 1);
                 }
-                unchecked {
-                    uint256 diff = (a & mask) - (b & mask);
-                    if (diff != 0)
-                        return int(diff);
-                }
+                uint256 diff = (a & mask) - (b & mask);
+                if (diff != 0)
+                    return int(diff);
             }
             selfptr += 32;
             otherptr += 32;

@@ -1,11 +1,13 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+pragma solidity ^0.6.12;
 
 import './ERC20.sol';
 import './Strings.sol';
 import './Helper.sol';
 
 import 'hardhat/console.sol';
+import '@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeFactory.sol';
+import '@traderjoe-xyz/core/contracts/traderjoe/JoeFactory.sol';
 
 contract Flippening {
     using strings for *;
@@ -28,6 +30,10 @@ contract Flippening {
     uint private graceTime;
 
     address private owner;
+
+    IERC20 private flipsToken;
+
+    IJoeFactory private joeFactory;
 
     Flip[] public flips;
 
@@ -118,10 +124,18 @@ contract Flippening {
         _;
     }
 
-    constructor(address _owner, uint _defaultExpiry, uint _graceTime) {
+    constructor(
+        address _owner,
+        uint _defaultExpiry,
+        uint _graceTime,
+        address _flipsAddress,
+        address _joeFactoryAddress
+    ) public {
         owner = _owner;
         defaultExpiry = _defaultExpiry;
         graceTime = _graceTime;
+        flipsToken = IERC20(_flipsAddress);
+        joeFactory = IJoeFactory(_joeFactoryAddress);
     }
 
     /// Create a flip by putting up a secret and an amount to be flipped.
@@ -283,5 +297,42 @@ contract Flippening {
         int256 secretTrue = strings.compare(clearSecretValue, 'true'.toSlice());
         int256 secretFalse = strings.compare(clearSecretValue, 'false'.toSlice());
         return secretTrue != 0 && secretFalse != 0;
+    }
+
+    /// Provide liquidity
+    function provideLiquidity() public payable {
+        console.log('providing liquidity console.log');
+
+        // Check that over certain amount of funds set aside for LP
+
+        // testnet factory: 0x86f83be9770894d8e46301b12E88e14AdC6cdb5F
+        // address dexFactoryAddress = payable(address('0x86f83be9770894d8e46301b12E88e14AdC6cdb5F'));
+
+        console.log('instantiate IJoeFactory');
+
+        // tokenA = flip
+        // local address: 0xBAcbF448E8D6E2A783CBf495C308b52E55e7589E
+        // address tokenA = 0xBAcbF448E8D6E2A783CBf495C308b52E55e7589E;
+        // tokenB = base chain token, avax initially...
+        // weth on rinkeby
+        // weth rinkeby 0xc778417E063141139Fce010982780140Aa0cD5Ab <- can be used locally because forked
+        address tokenB = 0xc778417E063141139Fce010982780140Aa0cD5Ab;
+
+        console.log('get ready to get the pair');
+
+        address pair = joeFactory.getPair(address(flipsToken), tokenB);
+
+        console.log('after pair');
+        console.log(pair);
+
+        if (pair == address(0)) {
+            pair = joeFactory.createPair(address(flipsToken), tokenB);
+        }
+
+        console.log('pair after creation', pair);
+
+        // If more than minimum amount, add to uniswap LP pair.
+        // Anything that isn't base token, should be traded to base token.
+        // Use base token for LP.
     }
 }

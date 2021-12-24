@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+pragma solidity ^0.6.12;
 
 interface IERC20 {
     function totalSupply() external view returns (uint256);
@@ -28,7 +28,7 @@ contract ERC20Basic is IERC20 {
 
     using SafeMath for uint256;
 
-    constructor() {
+    constructor() public {
         balances[msg.sender] = totalSupply_;
     }
 

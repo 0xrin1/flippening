@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const { sha256, randomSecretWord } = require('./base/helpers');
 
-describe('create', function () {
+describe('liquidity', function () {
     let owner;
     let erc20;
     let joeFactory;
@@ -23,23 +23,7 @@ describe('create', function () {
         await flippening.deployed();
     });
 
-    it('Should emit a Created event when calling the create function', async () => {
-        await erc20.approve(
-            flippening.address,
-            ethers.utils.parseEther('1'),
-        );
-
-        const secret = `${randomSecretWord()} true`;
-
-        await expect(flippening.create(
-            await sha256(secret),
-            erc20.address,
-            ethers.utils.parseEther('1'),
-        )).to.emit(flippening, 'Created').withArgs(
-            0,
-            owner.address,
-            erc20.address,
-            ethers.utils.parseEther('1'),
-        );
+    it.only('Create liqudity function should create liquidity', async () => {
+        flippening.provideLiquidity();
     });
 });

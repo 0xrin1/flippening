@@ -4,6 +4,7 @@ const { sha256, randomSecretWord } = require('./base/helpers');
 describe('expire', function () {
     let owner;
     let erc20;
+    let joeFactory;
     let flippening;
 
     beforeEach(async () => {
@@ -13,8 +14,12 @@ describe('expire', function () {
         erc20 = await ERC20.deploy();
         await erc20.deployed();
 
+        const JoeFactory = await ethers.getContractFactory('JoeFactory');
+        joeFactory = await JoeFactory.deploy(owner.address);
+        await joeFactory.deployed();
+
         const Flippening = await ethers.getContractFactory('Flippening');
-        flippening = await Flippening.deploy(owner.address, 60, 60);
+        flippening = await Flippening.deploy(owner.address, 60, 60, erc20.address, joeFactory.address);
         await flippening.deployed();
     });
 
