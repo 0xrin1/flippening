@@ -325,18 +325,11 @@ contract Flippening {
         // weth rinkeby 0xc778417E063141139Fce010982780140Aa0cD5Ab <- can be used locally because forked
         // address tokenB = 0xc778417E063141139Fce010982780140Aa0cD5Ab;
 
-        // console.log('get ready to get the pair');
-
         address pair = joeFactory.getPair(address(flipsToken), address(WAVAXToken));
-
-        // console.log('after pair');
-        // console.log(pair);
 
         if (pair == address(0)) {
             pair = joeFactory.createPair(address(flipsToken), address(WAVAXToken));
         }
-
-        // console.log('pair after creation', pair);
 
         // If more than minimum amount, add to uniswap LP pair.
         // Anything that isn't base token, should be traded to base token.
@@ -344,8 +337,6 @@ contract Flippening {
 
         // Router addLiquidity function already creates pair if it doesnt exist
         // Pairs usually created against wrapped avax.
-
-        uint256 deadline = block.timestamp.add(1000);
 
         flipsToken.approve(address(joeRouter), amount);
         WAVAXToken.approve(address(joeRouter), amount);
@@ -359,7 +350,7 @@ contract Flippening {
             amount, // tokenB amount min
             // owner, // to
             address(this),
-            deadline
+            block.timestamp.add(1000),
         );
 
         console.log('amountA', amountA);
