@@ -29,7 +29,15 @@ describe('expire', function () {
         await joeRouter.deployed();
 
         const Flippening = await ethers.getContractFactory('Flippening');
-        flippening = await Flippening.deploy(owner.address, 60, 60, erc20.address, joeRouter.address);
+        flippening = await Flippening.deploy(
+            owner.address,
+            60,
+            60,
+            erc20.address,
+            wavax.address,
+            joeRouter.address,
+            joeFactory.address,
+        );
         await flippening.deployed();
     });
 

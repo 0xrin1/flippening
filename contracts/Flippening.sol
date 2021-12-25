@@ -11,6 +11,7 @@ import '@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeFactory.sol';
 import '@traderjoe-xyz/core/contracts/traderjoe/JoeFactory.sol';
 
 import '@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter02.sol';
+import '@traderjoe-xyz/core/contracts/traderjoe/libraries/JoeLibrary.sol';
 import '@traderjoe-xyz/core/contracts/traderjoe/JoeRouter02.sol';
 
 contract Flippening {
@@ -36,8 +37,10 @@ contract Flippening {
     address private owner;
 
     IERC20 private flipsToken;
+    IERC20 private WAVAXToken;
 
     IJoeRouter02 private joeRouter;
+    IJoeFactory private joeFactory;
 
     Flip[] public flips;
 
@@ -133,13 +136,17 @@ contract Flippening {
         uint _defaultExpiry,
         uint _graceTime,
         address _flipsAddress,
-        address _joeRouterAddress
+        address _WAVAXAddress,
+        address _joeRouterAddress,
+        address _joeFactoryAddress
     ) public {
         owner = _owner;
         defaultExpiry = _defaultExpiry;
         graceTime = _graceTime;
         flipsToken = IERC20(_flipsAddress);
+        WAVAXToken = IERC20(_WAVAXAddress);
         joeRouter = IJoeRouter02(_joeRouterAddress);
+        joeFactory = IJoeFactory(_joeFactoryAddress);
     }
 
     /// Create a flip by putting up a secret and an amount to be flipped.
@@ -304,15 +311,11 @@ contract Flippening {
     }
 
     /// Provide liquidity
-    function provideLiquidity() public payable {
-        console.log('providing liquidity console.log');
-
+    function provideLiquidity(uint amount) public payable {
         // Check that over certain amount of funds set aside for LP
 
         // testnet factory: 0x86f83be9770894d8e46301b12E88e14AdC6cdb5F
         // address dexFactoryAddress = payable(address('0x86f83be9770894d8e46301b12E88e14AdC6cdb5F'));
-
-        console.log('instantiate IJoeFactory');
 
         // tokenA = flip
         // local address: 0xBAcbF448E8D6E2A783CBf495C308b52E55e7589E
@@ -320,18 +323,18 @@ contract Flippening {
         // tokenB = base chain token, avax initially...
         // weth on rinkeby
         // weth rinkeby 0xc778417E063141139Fce010982780140Aa0cD5Ab <- can be used locally because forked
-        address tokenB = 0xc778417E063141139Fce010982780140Aa0cD5Ab;
+        // address tokenB = 0xc778417E063141139Fce010982780140Aa0cD5Ab;
 
         // console.log('get ready to get the pair');
 
-        // address pair = joeFactory.getPair(address(flipsToken), tokenB);
+        address pair = joeFactory.getPair(address(flipsToken), address(WAVAXToken));
 
         // console.log('after pair');
         // console.log(pair);
 
-        // if (pair == address(0)) {
-        //     pair = joeFactory.createPair(address(flipsToken), tokenB);
-        // }
+        if (pair == address(0)) {
+            pair = joeFactory.createPair(address(flipsToken), address(WAVAXToken));
+        }
 
         // console.log('pair after creation', pair);
 
@@ -341,5 +344,26 @@ contract Flippening {
 
         // Router addLiquidity function already creates pair if it doesnt exist
         // Pairs usually created against wrapped avax.
+
+        uint256 deadline = block.timestamp.add(1000);
+
+        flipsToken.approve(address(joeRouter), amount);
+        WAVAXToken.approve(address(joeRouter), amount);
+
+        (uint256 amountA, uint256 amountB, uint256 liquidity) = joeRouter.addLiquidity(
+            address(flipsToken), // tokenA address
+            address(WAVAXToken), // tokenB address
+            amount, // tokenA amount desired
+            amount, // tokenB amount desired
+            amount, // tokenA amount min
+            amount, // tokenB amount min
+            // owner, // to
+            address(this),
+            deadline
+        );
+
+        console.log('amountA', amountA);
+        console.log('amountB', amountB);
+        console.log('liquidity', liquidity);
     }
 }
