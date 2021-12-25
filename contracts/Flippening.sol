@@ -6,8 +6,12 @@ import './Strings.sol';
 import './Helper.sol';
 
 import 'hardhat/console.sol';
+
 import '@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeFactory.sol';
 import '@traderjoe-xyz/core/contracts/traderjoe/JoeFactory.sol';
+
+import '@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter02.sol';
+import '@traderjoe-xyz/core/contracts/traderjoe/JoeRouter02.sol';
 
 contract Flippening {
     using strings for *;
@@ -33,7 +37,7 @@ contract Flippening {
 
     IERC20 private flipsToken;
 
-    IJoeFactory private joeFactory;
+    IJoeRouter02 private joeRouter;
 
     Flip[] public flips;
 
@@ -129,13 +133,13 @@ contract Flippening {
         uint _defaultExpiry,
         uint _graceTime,
         address _flipsAddress,
-        address _joeFactoryAddress
+        address _joeRouterAddress
     ) public {
         owner = _owner;
         defaultExpiry = _defaultExpiry;
         graceTime = _graceTime;
         flipsToken = IERC20(_flipsAddress);
-        joeFactory = IJoeFactory(_joeFactoryAddress);
+        joeRouter = IJoeRouter02(_joeRouterAddress);
     }
 
     /// Create a flip by putting up a secret and an amount to be flipped.
@@ -318,21 +322,24 @@ contract Flippening {
         // weth rinkeby 0xc778417E063141139Fce010982780140Aa0cD5Ab <- can be used locally because forked
         address tokenB = 0xc778417E063141139Fce010982780140Aa0cD5Ab;
 
-        console.log('get ready to get the pair');
+        // console.log('get ready to get the pair');
 
-        address pair = joeFactory.getPair(address(flipsToken), tokenB);
+        // address pair = joeFactory.getPair(address(flipsToken), tokenB);
 
-        console.log('after pair');
-        console.log(pair);
+        // console.log('after pair');
+        // console.log(pair);
 
-        if (pair == address(0)) {
-            pair = joeFactory.createPair(address(flipsToken), tokenB);
-        }
+        // if (pair == address(0)) {
+        //     pair = joeFactory.createPair(address(flipsToken), tokenB);
+        // }
 
-        console.log('pair after creation', pair);
+        // console.log('pair after creation', pair);
 
         // If more than minimum amount, add to uniswap LP pair.
         // Anything that isn't base token, should be traded to base token.
         // Use base token for LP.
+
+        // Router addLiquidity function already creates pair if it doesnt exist
+        // Pairs usually created against wrapped avax.
     }
 }
