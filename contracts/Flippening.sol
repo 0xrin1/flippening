@@ -342,13 +342,17 @@ contract Flippening {
 
         (uint256 reserveInput, uint256 reserveOutput, ) = pair.getReserves();
 
+        console.log('reserveInput', reserveInput);
+        console.log('reserveOutput', reserveOutput);
+
         uint256 flipAmount;
         if (reserveInput == 0 && reserveOutput == 0) {
             // If there is no liquidity, provide liquidity with same value between AVAX and Flip.
             return avaxAmount;
         }
 
-        return JoeLibrary.getAmountOut(avaxAmount, reserveInput, reserveOutput);
+        return JoeLibrary.quote(avaxAmount, reserveInput, reserveOutput);
+        // return JoeLibrary.getAmountOut(avaxAmount, reserveInput, reserveOutput);
     }
 
     /// Provide liquidity
@@ -366,16 +370,16 @@ contract Flippening {
         console.log('avaxAmount', avaxAmount);
         console.log('flipAmount', flipAmount);
 
-        flipsToken.approve(address(joeRouter), flipAmount); // use same amonut of flips as avax tokens
-        WAVAXToken.approve(address(joeRouter), avaxAmount);
+        flipsToken.approve(address(joeRouter), avaxAmount); // use same amonut of flips as avax tokens
+        WAVAXToken.approve(address(joeRouter), flipAmount);
 
         return joeRouter.addLiquidity(
             address(flipsToken), // tokenA address (flips)
             address(WAVAXToken), // tokenB address (wavax)
-            flipAmount, // flip token <- just use same value as avax amount since the contract can mint unlimited supply
             avaxAmount, // tokenB amount desired
-            flipAmount.sub(100), // tokenA amount min (flips)
-            avaxAmount.sub(100), // tokenB amount min (wavax)
+            flipAmount, // flip token <- just use same value as avax amount since the contract can mint unlimited supply
+            avaxAmount, // tokenB amount min (wavax)
+            flipAmount, // tokenA amount min (flips)
             // owner, // to
             address(this),
             block.timestamp.add(1000)

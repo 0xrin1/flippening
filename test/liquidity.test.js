@@ -58,7 +58,7 @@ describe('liquidity', function () {
         await flippening.convertToWAVAX(erc20.address, ethers.utils.parseEther('0.5'));
     });
 
-    it.only('prcessFees() function should convert fee to WAVAX and provide liquidity', async () => {
+    it.only('processFees() function should convert fee to WAVAX and provide liquidity', async () => {
         // Provide liquidity so that pair is created
         await flippening.provideLiquidity(ethers.utils.parseEther('0.5'));
 
