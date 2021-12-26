@@ -48,14 +48,40 @@ describe('liquidity', function () {
     });
 
     it('provideLiquidity() function should create liquidity', async () => {
-        await flippening.provideLiquidity(ethers.utils.parseEther('0.5'), ethers.utils.parseEther('0.5'));
+        await flippening.provideLiquidity(ethers.utils.parseEther('0.5'));
     });
 
-    it.only('convertToWAVAX() function should convert incoming tokens to WAVAX', async () => {
+    it('convertToWAVAX() function should convert incoming tokens to WAVAX', async () => {
         // Provide liquidity so that pair is created
-        await flippening.provideLiquidity(ethers.utils.parseEther('0.5'), ethers.utils.parseEther('0.5'));
+        await flippening.provideLiquidity(ethers.utils.parseEther('0.5'));
 
-        const amounts = await flippening.convertToWAVAX(erc20.address, ethers.utils.parseEther('0.5'));
-        console.log('amounts', amounts);
+        await flippening.convertToWAVAX(erc20.address, ethers.utils.parseEther('0.5'));
+    });
+
+    it.only('prcessFees() function should convert fee to WAVAX and provide liquidity', async () => {
+        // Provide liquidity so that pair is created
+        await flippening.provideLiquidity(ethers.utils.parseEther('0.5'));
+
+        await erc20.approve(
+            flippening.address,
+            ethers.utils.parseEther('2'),
+        );
+
+        const secret = `${randomSecretWord()} true`;
+
+        await flippening.create(
+            await sha256(secret),
+            erc20.address,
+            ethers.utils.parseEther('1'),
+        );
+
+        await flippening.guess(0, 'false');
+
+        await flippening.processFees(0);
+
+        // Provide liquidity so that pair is created
+        // await flippening.provideLiquidity(ethers.utils.parseEther('0.5'), ethers.utils.parseEther('0.5'));
+
+        // await flippening.convertToWAVAX(erc20.address, ethers.utils.parseEther('0.5'));
     });
 });

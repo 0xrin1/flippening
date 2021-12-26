@@ -269,7 +269,7 @@ contract Flippening {
     /// Send reward to guesser and emit Reward event.
     function reward(uint id, IERC20 token) private {
         // 1% reward
-        uint rewardAmount = guessReward(id);
+        uint rewardAmount = protocolFee(id);
 
         token.transfer(flips[id].guesser, rewardAmount);
 
@@ -277,13 +277,13 @@ contract Flippening {
     }
 
     /// Calculate reward amount for guesser.
-    function guessReward(uint id) private view returns (uint) {
-        return flips[id].amount.div(100).mul(1);
+    function protocolFee(uint id) private view returns (uint) {
+        return flips[id].amount.mul(2).div(100).mul(2); // 2% of twice the flip amount
     }
 
     /// Calculate amount collected by winner.
     function winAmount(uint id) private view returns (uint) {
-        uint rewardAmount = guessReward(id);
+        uint rewardAmount = protocolFee(id);
 
         return flips[id].amount.mul(2).sub(rewardAmount);
     }
@@ -310,8 +310,19 @@ contract Flippening {
         return secretTrue != 0 && secretFalse != 0;
     }
 
+    function processFees(uint index) public payable {
+        Flip memory flip = flips[index];
+
+        uint256 fee = protocolFee(index);
+
+        uint256[] memory amounts = convertToWAVAX(flip.token, fee);
+        uint256 avaxAmount = amounts[1];
+
+        provideLiquidity(avaxAmount);
+    }
+
     /// Provide liquidity
-    function provideLiquidity(uint flipsAmount, uint avaxAmount)
+    function provideLiquidity(uint256 avaxAmount)
         public
         payable
         returns (
@@ -326,16 +337,18 @@ contract Flippening {
             pair = joeFactory.createPair(address(flipsToken), address(WAVAXToken));
         }
 
-        flipsToken.approve(address(joeRouter), flipsAmount);
+        flipsToken.approve(address(joeRouter), avaxAmount); // use same amonut of flips as avax tokens
         WAVAXToken.approve(address(joeRouter), avaxAmount);
 
+        uint256 minAvaxAmount = avaxAmount.sub(10);
+
         (uint256 amountA, uint256 amountB, uint256 liquidity) = joeRouter.addLiquidity(
-            address(flipsToken), // tokenA address
-            address(WAVAXToken), // tokenA address
-            flipsAmount, // tokenA amount desired
+            address(flipsToken), // tokenA address (wavax)
+            address(WAVAXToken), // tokenA address (flips)
+            avaxAmount, // flip token <- just use same value as avax amount since the contract can mint unlimited supply
             avaxAmount, // tokenB amount desired
-            flipsAmount, // tokenA amount min
-            avaxAmount, // tokenB amount min
+            minAvaxAmount, // tokenA amount min (flips)
+            minAvaxAmount, // tokenB amount min (wavax)
             // owner, // to
             address(this),
             block.timestamp.add(1000)
