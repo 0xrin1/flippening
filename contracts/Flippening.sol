@@ -345,26 +345,26 @@ contract Flippening {
     }
 
     /// Convert token to WAVAX
-    function convertToWAVAX(address token, uint amount) public returns (uint) {
+    function convertToWAVAX(address token, uint amount) public returns (uint256[] memory amounts) {
         uint expectedAmount;
 
         address pair = joeFactory.getPair(address(flipsToken), address(WAVAXToken));
 
         require(pair != address(0), 'Cannot provide liquidity with token. It has no existing pair.');
 
+        IERC20(token).approve(address(joeRouter), amount);
+
         address[] memory path = new address[](2);
         path[0] = token;
         path[1] = address(WAVAXToken);
 
-        joeRouter.swapExactTokensForTokens(
+        return joeRouter.swapExactTokensForTokens(
             amount,
             expectedAmount,
             path,
             address(this),
             block.timestamp.add(1000)
         );
-
-        return 0;
     }
 
     function feesToCollect() public returns (uint) {

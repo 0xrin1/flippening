@@ -51,7 +51,11 @@ describe('liquidity', function () {
         await flippening.provideLiquidity(ethers.utils.parseEther('0.5'), ethers.utils.parseEther('0.5'));
     });
 
-    it('convertToWAVAX() function should convert incoming tokens to WAVAX', async () => {
-        await flippening.convertToWAVAX(erc20.address, ethers.utils.parseEther('0.5'));
+    it.only('convertToWAVAX() function should convert incoming tokens to WAVAX', async () => {
+        // Provide liquidity so that pair is created
+        await flippening.provideLiquidity(ethers.utils.parseEther('0.5'), ethers.utils.parseEther('0.5'));
+
+        const amounts = await flippening.convertToWAVAX(erc20.address, ethers.utils.parseEther('0.5'));
+        console.log('amounts', amounts);
     });
 });
