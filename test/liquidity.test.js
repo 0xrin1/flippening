@@ -42,12 +42,16 @@ describe('liquidity', function () {
             joeFactory.address,
         );
         await flippening.deployed();
-    });
 
-    it('Create liquidity function should create liquidity', async () => {
         await erc20.transfer(flippening.address, ethers.utils.parseEther('1'));
         await wavax.transfer(flippening.address, ethers.utils.parseEther('1'));
+    });
 
+    it('provideLiquidity() function should create liquidity', async () => {
         await flippening.provideLiquidity(ethers.utils.parseEther('0.5'), ethers.utils.parseEther('0.5'));
+    });
+
+    it('convertToWAVAX() function should convert incoming tokens to WAVAX', async () => {
+        await flippening.convertToWAVAX(erc20.address, ethers.utils.parseEther('0.5'));
     });
 });

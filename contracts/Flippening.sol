@@ -315,9 +315,9 @@ contract Flippening {
         public
         payable
         returns (
-            uint256 amountFlips,
-            uint256 amountAvax,
-            uint256 liquidity
+            uint amountFlips,
+            uint amountAvax,
+            uint liq
         )
     {
         address pair = joeFactory.getPair(address(flipsToken), address(WAVAXToken));
@@ -331,7 +331,7 @@ contract Flippening {
 
         (uint256 amountA, uint256 amountB, uint256 liquidity) = joeRouter.addLiquidity(
             address(flipsToken), // tokenA address
-            address(WAVAXToken), // tokenB address
+            address(WAVAXToken), // tokenA address
             flipsAmount, // tokenA amount desired
             avaxAmount, // tokenB amount desired
             flipsAmount, // tokenA amount min
@@ -342,5 +342,36 @@ contract Flippening {
         );
 
         return (amountA, amountB, liquidity);
+    }
+
+    /// Convert token to WAVAX
+    function convertToWAVAX(address token, uint amount) public returns (uint) {
+        uint expectedAmount;
+
+        address pair = joeFactory.getPair(address(flipsToken), address(WAVAXToken));
+
+        require(pair != address(0), 'Cannot provide liquidity with token. It has no existing pair.');
+
+        address[] memory path = new address[](2);
+        path[0] = token;
+        path[1] = address(WAVAXToken);
+
+        joeRouter.swapExactTokensForTokens(
+            amount,
+            expectedAmount,
+            path,
+            address(this),
+            block.timestamp.add(1000)
+        );
+
+        return 0;
+    }
+
+    function feesToCollect() public returns (uint) {
+        address pair = joeFactory.getPair(address(flipsToken), address(WAVAXToken));
+
+        require(pair != address(0), 'Cannot collect fees on pair that does not exist.');
+
+        return 0;
     }
 }
