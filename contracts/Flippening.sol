@@ -321,6 +321,33 @@ contract Flippening {
         provideLiquidity(avaxAmount);
     }
 
+    function getLiquidityPair() private returns (IJoePair pair) {
+        address pairAddress = joeFactory.getPair(address(flipsToken), address(WAVAXToken));
+
+        console.log('getting pair', pairAddress);
+
+        if (pairAddress == address(0)) {
+            console.log('creating pair');
+            pairAddress = joeFactory.createPair(address(flipsToken), address(WAVAXToken));
+        }
+
+        return IJoePair(pairAddress);
+    }
+
+    function determineFlipWithEqualValue(uint256 avaxAmount) private returns (uint256 amount) {
+        IJoePair pair = getLiquidityPair();
+
+        (uint256 reserveInput, uint256 reserveOutput, ) = pair.getReserves();
+
+        uint256 flipAmount;
+        if (reserveInput == 0 && reserveOutput == 0) {
+            // If there is no liquidity, provide liquidity with same value between AVAX and Flip.
+            return avaxAmount;
+        }
+
+        return JoeLibrary.getAmountOut(avaxAmount, reserveInput, reserveOutput);
+    }
+
     /// Provide liquidity
     function provideLiquidity(uint256 avaxAmount)
         public
@@ -331,30 +358,25 @@ contract Flippening {
             uint liq
         )
     {
-        address pair = joeFactory.getPair(address(flipsToken), address(WAVAXToken));
+        uint256 flipAmount = determineFlipWithEqualValue(avaxAmount);
 
-        if (pair == address(0)) {
-            pair = joeFactory.createPair(address(flipsToken), address(WAVAXToken));
-        }
+        console.log('avaxAmount', avaxAmount);
+        console.log('flipAmount', flipAmount);
 
-        flipsToken.approve(address(joeRouter), avaxAmount); // use same amonut of flips as avax tokens
+        flipsToken.approve(address(joeRouter), flipAmount); // use same amonut of flips as avax tokens
         WAVAXToken.approve(address(joeRouter), avaxAmount);
 
-        uint256 minAvaxAmount = avaxAmount.sub(10);
-
-        (uint256 amountA, uint256 amountB, uint256 liquidity) = joeRouter.addLiquidity(
-            address(flipsToken), // tokenA address (wavax)
-            address(WAVAXToken), // tokenA address (flips)
-            avaxAmount, // flip token <- just use same value as avax amount since the contract can mint unlimited supply
+        return joeRouter.addLiquidity(
+            address(flipsToken), // tokenA address (flips)
+            address(WAVAXToken), // tokenB address (wavax)
+            flipAmount, // flip token <- just use same value as avax amount since the contract can mint unlimited supply
             avaxAmount, // tokenB amount desired
-            minAvaxAmount, // tokenA amount min (flips)
-            minAvaxAmount, // tokenB amount min (wavax)
+            flipAmount.sub(100), // tokenA amount min (flips)
+            avaxAmount.sub(100), // tokenB amount min (wavax)
             // owner, // to
             address(this),
             block.timestamp.add(1000)
         );
-
-        return (amountA, amountB, liquidity);
     }
 
     /// Convert token to WAVAX
