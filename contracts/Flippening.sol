@@ -326,10 +326,7 @@ contract Flippening {
     function getLiquidityPair() private returns (IJoePair pair) {
         address pairAddress = joeFactory.getPair(address(flipsToken), address(WAVAXToken));
 
-        console.log('getting pair', pairAddress);
-
         if (pairAddress == address(0)) {
-            console.log('creating pair');
             pairAddress = joeFactory.createPair(address(flipsToken), address(WAVAXToken));
         }
 
@@ -342,10 +339,6 @@ contract Flippening {
 
         (uint256 reserveInput, uint256 reserveOutput, ) = pair.getReserves();
 
-        console.log('reserveInput', reserveInput);
-        console.log('reserveOutput', reserveOutput);
-
-        uint256 flipAmount;
         if (reserveInput == 0 && reserveOutput == 0) {
             // If there is no liquidity, provide liquidity with same value between AVAX and Flip.
             return avaxAmount;
@@ -366,9 +359,6 @@ contract Flippening {
         )
     {
         uint256 flipAmount = determineFlipWithEqualValue(avaxAmount);
-
-        console.log('avaxAmount', avaxAmount);
-        console.log('flipAmount', flipAmount);
 
         flipsToken.approve(address(joeRouter), avaxAmount); // use same amonut of flips as avax tokens
         WAVAXToken.approve(address(joeRouter), flipAmount);
@@ -392,7 +382,7 @@ contract Flippening {
 
         address pair = joeFactory.getPair(address(flipsToken), address(WAVAXToken));
 
-        require(pair != address(0), 'Cannot provide liquidity with token. It has no existing pair.');
+        require(pair != address(0), 'Cannot convert token to WAVAX. It has no existing pair.');
 
         IERC20(token).approve(address(joeRouter), amount);
 
@@ -409,7 +399,7 @@ contract Flippening {
         );
     }
 
-    function feesToCollect() public returns (uint) {
+    function feesToCollect() public view returns (uint) {
         address pair = joeFactory.getPair(address(flipsToken), address(WAVAXToken));
 
         require(pair != address(0), 'Cannot collect fees on pair that does not exist.');
