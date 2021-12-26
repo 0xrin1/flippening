@@ -310,6 +310,7 @@ contract Flippening {
         return secretTrue != 0 && secretFalse != 0;
     }
 
+    // Determine amount that should be paid to protocol and use it to provide liquidity.
     function processFees(uint index) public payable {
         Flip memory flip = flips[index];
 
@@ -321,6 +322,7 @@ contract Flippening {
         provideLiquidity(avaxAmount);
     }
 
+    // Determine liquidity pair for flips and wavax tokens and create if null address returned.
     function getLiquidityPair() private returns (IJoePair pair) {
         address pairAddress = joeFactory.getPair(address(flipsToken), address(WAVAXToken));
 
@@ -334,6 +336,7 @@ contract Flippening {
         return IJoePair(pairAddress);
     }
 
+    /// Determine how many Flip tokens are equal in value to the provided amount of avax tokens.
     function determineFlipWithEqualValue(uint256 avaxAmount) private returns (uint256 amount) {
         IJoePair pair = getLiquidityPair();
 
