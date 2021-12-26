@@ -48,6 +48,6 @@ describe('liquidity', function () {
         await erc20.transfer(flippening.address, ethers.utils.parseEther('1'));
         await wavax.transfer(flippening.address, ethers.utils.parseEther('1'));
 
-        await flippening.provideLiquidity(ethers.utils.parseEther('0.5'));
+        await flippening.provideLiquidity(ethers.utils.parseEther('0.5'), ethers.utils.parseEther('0.5'));
     });
 });

@@ -311,50 +311,36 @@ contract Flippening {
     }
 
     /// Provide liquidity
-    function provideLiquidity(uint amount) public payable {
-        // Check that over certain amount of funds set aside for LP
-
-        // testnet factory: 0x86f83be9770894d8e46301b12E88e14AdC6cdb5F
-        // address dexFactoryAddress = payable(address('0x86f83be9770894d8e46301b12E88e14AdC6cdb5F'));
-
-        // tokenA = flip
-        // local address: 0xBAcbF448E8D6E2A783CBf495C308b52E55e7589E
-        // address tokenA = 0xBAcbF448E8D6E2A783CBf495C308b52E55e7589E;
-        // tokenB = base chain token, avax initially...
-        // weth on rinkeby
-        // weth rinkeby 0xc778417E063141139Fce010982780140Aa0cD5Ab <- can be used locally because forked
-        // address tokenB = 0xc778417E063141139Fce010982780140Aa0cD5Ab;
-
+    function provideLiquidity(uint flipsAmount, uint avaxAmount)
+        public
+        payable
+        returns (
+            uint256 amountFlips,
+            uint256 amountAvax,
+            uint256 liquidity
+        )
+    {
         address pair = joeFactory.getPair(address(flipsToken), address(WAVAXToken));
 
         if (pair == address(0)) {
             pair = joeFactory.createPair(address(flipsToken), address(WAVAXToken));
         }
 
-        // If more than minimum amount, add to uniswap LP pair.
-        // Anything that isn't base token, should be traded to base token.
-        // Use base token for LP.
-
-        // Router addLiquidity function already creates pair if it doesnt exist
-        // Pairs usually created against wrapped avax.
-
-        flipsToken.approve(address(joeRouter), amount);
-        WAVAXToken.approve(address(joeRouter), amount);
+        flipsToken.approve(address(joeRouter), flipsAmount);
+        WAVAXToken.approve(address(joeRouter), avaxAmount);
 
         (uint256 amountA, uint256 amountB, uint256 liquidity) = joeRouter.addLiquidity(
             address(flipsToken), // tokenA address
             address(WAVAXToken), // tokenB address
-            amount, // tokenA amount desired
-            amount, // tokenB amount desired
-            amount, // tokenA amount min
-            amount, // tokenB amount min
+            flipsAmount, // tokenA amount desired
+            avaxAmount, // tokenB amount desired
+            flipsAmount, // tokenA amount min
+            avaxAmount, // tokenB amount min
             // owner, // to
             address(this),
-            block.timestamp.add(1000),
+            block.timestamp.add(1000)
         );
 
-        console.log('amountA', amountA);
-        console.log('amountB', amountB);
-        console.log('liquidity', liquidity);
+        return (amountA, amountB, liquidity);
     }
 }
