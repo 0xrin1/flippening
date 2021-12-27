@@ -17,7 +17,18 @@ contract WAVAX is ERC20 {
 }
 
 contract FLIP is ERC20 {
-    constructor() ERC20("Flippening Token", "FLIP", 18) {
-        balanceOf[msg.sender] = 1000000000000000000000000; // 1 million * 1e18
+    address owner;
+
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
+    }
+
+    constructor(address _owner) ERC20("Flippening Token", "FLIP", 18) {
+        owner = _owner;
+    }
+
+    function mint(address to, uint256 amount) public payable onlyOwner {
+        _mint(to, amount);
     }
 }

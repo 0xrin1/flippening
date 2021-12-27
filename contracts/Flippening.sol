@@ -3,6 +3,7 @@ pragma solidity >=0.8.0;
 
 import './ERC20.sol';
 import './interfaces/IERC20.sol';
+import './interfaces/IFLIP.sol';
 import './Strings.sol';
 import './Helper.sol';
 import './SafeMath.sol';
@@ -36,7 +37,7 @@ contract Flippening {
 
     address private owner;
 
-    IERC20 private flipsToken;
+    IFLIP private flipsToken;
     IERC20 private WAVAXToken;
 
     IJoeRouter02 private joeRouter;
@@ -135,7 +136,6 @@ contract Flippening {
         address _owner,
         uint _defaultExpiry,
         uint _graceTime,
-        address _flipsAddress,
         address _WAVAXAddress,
         address _joeRouterAddress,
         address _joeFactoryAddress
@@ -143,10 +143,13 @@ contract Flippening {
         owner = _owner;
         defaultExpiry = _defaultExpiry;
         graceTime = _graceTime;
-        flipsToken = IERC20(_flipsAddress);
         WAVAXToken = IERC20(_WAVAXAddress);
         joeRouter = IJoeRouter02(_joeRouterAddress);
         joeFactory = IJoeFactory(_joeFactoryAddress);
+    }
+
+    function setFlipsAddress(address _flipsAddress) public onlyOwner {
+        flipsToken = IFLIP(_flipsAddress);
     }
 
     /// Create a flip by putting up a secret and an amount to be flipped.
@@ -167,15 +170,9 @@ contract Flippening {
             settled: false
         }));
 
-        console.log('pushed into flip');
-
         IERC20 token = IERC20(tokenAddress);
 
-        console.log('token', address(token));
-
         token.transferFrom(msg.sender, address(this), amount);
-
-        console.log('amount transferfrom completed');
 
         emit Created(flips.length - 1, msg.sender, tokenAddress, amount);
     }
@@ -374,8 +371,10 @@ contract Flippening {
     {
         uint256 flipAmount = determineFlipWithEqualValue(avaxAmount);
 
-        flipsToken.approve(address(joeRouter), avaxAmount); // use same amonut of flips as avax tokens
-        WAVAXToken.approve(address(joeRouter), flipAmount);
+        flipsToken.mint(address(this), flipAmount);
+
+        flipsToken.approve(address(joeRouter), flipAmount); // use same amonut of flips as avax tokens
+        WAVAXToken.approve(address(joeRouter), avaxAmount);
 
         return joeRouter.addLiquidity(
             address(flipsToken), // tokenA address (flips)

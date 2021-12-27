@@ -13,10 +13,6 @@ describe('liquidity', function () {
     beforeEach(async () => {
         [ owner ] = await ethers.getSigners();
 
-        const FLIP = await ethers.getContractFactory('FLIP');
-        flip = await FLIP.deploy();
-        await flip.deployed();
-
         const ERC20 = await ethers.getContractFactory('ERC20Basic');
         erc20 = await ERC20.deploy();
         await erc20.deployed();
@@ -41,14 +37,19 @@ describe('liquidity', function () {
             owner.address,
             60,
             60,
-            flip.address,
             wavax.address,
             joeRouter.address,
             joeFactory.address,
         );
         await flippening.deployed();
 
-        await flip.transfer(flippening.address, ethers.utils.parseEther('1'));
+        const FLIP = await ethers.getContractFactory('FLIP');
+        flip = await FLIP.deploy(flippening.address);
+        await flip.deployed();
+
+        await flippening.setFlipsAddress(flip.address);
+
+        // await flip.transfer(flippening.address, ethers.utils.parseEther('1'));
         await wavax.transfer(flippening.address, ethers.utils.parseEther('1'));
     });
 
