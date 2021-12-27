@@ -319,7 +319,11 @@ contract Flippening {
         uint256[] memory amounts = convertToWAVAX(flip.token, fee);
         uint256 avaxAmount = amounts[1];
 
-        provideLiquidity(avaxAmount);
+        (uint amountFlips, uint amountAvax, uint liq) = provideLiquidity(avaxAmount);
+
+        console.log('amountFlips', amountFlips);
+        console.log('amountAvax', amountAvax);
+        console.log('liq', liq);
     }
 
     // Determine liquidity pair for flips and wavax tokens and create if null address returned.
@@ -343,6 +347,10 @@ contract Flippening {
             // If there is no liquidity, provide liquidity with same value between AVAX and Flip.
             return avaxAmount;
         }
+
+        uint256 quote = JoeLibrary.quote(1e18, reserveInput, reserveOutput);
+
+        console.log('flip price in avax: ', quote);
 
         return JoeLibrary.quote(avaxAmount, reserveInput, reserveOutput);
         // return JoeLibrary.getAmountOut(avaxAmount, reserveInput, reserveOutput);
