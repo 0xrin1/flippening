@@ -34,7 +34,8 @@
  *      corresponding to the left and right parts of the string.
  */
 
-pragma solidity ^0.6.12;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 library strings {
     struct slice {
@@ -72,6 +73,55 @@ library strings {
             ptr := add(self, 0x20)
         }
         return slice(bytes(self).length, ptr);
+    }
+
+    /*
+     * @dev Returns the length of a null-terminated bytes32 string.
+     * @param self The value to find the length of.
+     * @return The length of the string, from 0 to 32.
+     */
+    function len(bytes32 self) internal pure returns (uint) {
+        uint ret;
+        if (self == 0)
+            return 0;
+        if (uint(self) & 0xffffffffffffffffffffffffffffffff == 0) {
+            ret += 16;
+            self = bytes32(uint(self) / 0x100000000000000000000000000000000);
+        }
+        if (uint(self) & 0xffffffffffffffff == 0) {
+            ret += 8;
+            self = bytes32(uint(self) / 0x10000000000000000);
+        }
+        if (uint(self) & 0xffffffff == 0) {
+            ret += 4;
+            self = bytes32(uint(self) / 0x100000000);
+        }
+        if (uint(self) & 0xffff == 0) {
+            ret += 2;
+            self = bytes32(uint(self) / 0x10000);
+        }
+        if (uint(self) & 0xff == 0) {
+            ret += 1;
+        }
+        return 32 - ret;
+    }
+
+    /*
+     * @dev Returns a slice containing the entire bytes32, interpreted as a
+     *      null-terminated utf-8 string.
+     * @param self The bytes32 value to convert to a slice.
+     * @return A new slice containing the value of the input argument up to the
+     *         first null.
+     */
+    function toSliceB32(bytes32 self) internal pure returns (slice memory ret) {
+        // Allocate space for `self` in memory, copy it there, and point ret at it
+        assembly {
+            let ptr := mload(0x40)
+            mstore(0x40, add(ptr, 0x20))
+            mstore(ptr, self)
+            mstore(add(ret, 0x20), ptr)
+        }
+        ret._len = len(self);
     }
 
     /*
@@ -162,13 +212,15 @@ library strings {
             }
             if (a != b) {
                 // Mask out irrelevant bytes and check again
-                uint256 mask = uint256(-1); // 0xffff...
+                uint256 mask = type(uint256).max; // 0xffff...
                 if(shortest < 32) {
                   mask = ~(2 ** (8 * (32 - shortest + idx)) - 1);
                 }
-                uint256 diff = (a & mask) - (b & mask);
-                if (diff != 0)
-                    return int(diff);
+                unchecked {
+                    uint256 diff = (a & mask) - (b & mask);
+                    if (diff != 0)
+                        return int(diff);
+                }
             }
             selfptr += 32;
             otherptr += 32;
@@ -665,3 +717,4 @@ library strings {
         return ret;
     }
 }
+

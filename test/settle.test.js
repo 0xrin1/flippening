@@ -16,7 +16,7 @@ describe('settle', function () {
         erc20 = await ERC20.deploy();
         await erc20.deployed();
 
-        const WAVAX = await ethers.getContractFactory('ERC20Basic');
+        const WAVAX = await ethers.getContractFactory('WAVAX');
         wavax = await WAVAX.deploy();
         await wavax.deployed();
 

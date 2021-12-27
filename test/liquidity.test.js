@@ -4,6 +4,7 @@ const { sha256, randomSecretWord } = require('./base/helpers');
 describe('liquidity', function () {
     let owner;
     let flip;
+    let erc20;
     let wavax;
     let joeFactory;
     let joeRouter;
@@ -12,7 +13,7 @@ describe('liquidity', function () {
     beforeEach(async () => {
         [ owner ] = await ethers.getSigners();
 
-        const FLIP = await ethers.getContractFactory('ERC20Basic');
+        const FLIP = await ethers.getContractFactory('FLIP');
         flip = await FLIP.deploy();
         await flip.deployed();
 
@@ -20,7 +21,7 @@ describe('liquidity', function () {
         erc20 = await ERC20.deploy();
         await erc20.deployed();
 
-        const WAVAX = await ethers.getContractFactory('ERC20Basic');
+        const WAVAX = await ethers.getContractFactory('WAVAX');
         wavax = await WAVAX.deploy();
         await wavax.deployed();
 
@@ -62,7 +63,7 @@ describe('liquidity', function () {
         await flippening.convertToWAVAX(flip.address, ethers.utils.parseEther('0.5'));
     });
 
-    it.only('processFees() function should convert fee to WAVAX and provide liquidity', async () => {
+    it('processFees() function should convert fee to WAVAX and provide liquidity', async () => {
         // Provide liquidity so that pair is created
         await flippening.provideLiquidity(ethers.utils.parseEther('0.5'));
 
@@ -89,7 +90,7 @@ describe('liquidity', function () {
         // await flippening.convertToWAVAX(flip.address, ethers.utils.parseEther('0.5'));
     });
 
-    it.only('provideLiquidity() function should not change price ', async () => {
+    it('provideLiquidity() function should not change price ', async () => {
         // Provide liquidity so that pair is created
         await flippening.provideLiquidity(ethers.utils.parseEther('0.5'));
 

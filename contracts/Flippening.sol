@@ -1,18 +1,18 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.6.12;
+pragma solidity >=0.8.0;
 
 import './ERC20.sol';
+import './interfaces/IERC20.sol';
 import './Strings.sol';
 import './Helper.sol';
+import './SafeMath.sol';
 
 import 'hardhat/console.sol';
 
+import '@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol';
 import '@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeFactory.sol';
-import '@traderjoe-xyz/core/contracts/traderjoe/JoeFactory.sol';
-
 import '@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter02.sol';
 import '@traderjoe-xyz/core/contracts/traderjoe/libraries/JoeLibrary.sol';
-import '@traderjoe-xyz/core/contracts/traderjoe/JoeRouter02.sol';
 
 contract Flippening {
     using strings for *;
@@ -139,7 +139,7 @@ contract Flippening {
         address _WAVAXAddress,
         address _joeRouterAddress,
         address _joeFactoryAddress
-    ) public {
+    ) {
         owner = _owner;
         defaultExpiry = _defaultExpiry;
         graceTime = _graceTime;
@@ -167,9 +167,15 @@ contract Flippening {
             settled: false
         }));
 
+        console.log('pushed into flip');
+
         IERC20 token = IERC20(tokenAddress);
 
+        console.log('token', address(token));
+
         token.transferFrom(msg.sender, address(this), amount);
+
+        console.log('amount transferfrom completed');
 
         emit Created(flips.length - 1, msg.sender, tokenAddress, amount);
     }
