@@ -33,12 +33,15 @@ describe('expire', function () {
             owner.address,
             60,
             60,
-            erc20.address,
             wavax.address,
             joeRouter.address,
             joeFactory.address,
         );
         await flippening.deployed();
+
+        const FLIP = await ethers.getContractFactory('FLIP');
+        flip = await FLIP.deploy(flippening.address);
+        await flip.deployed();
     });
 
     it('Should not emit a Settled event when expiring an event that has not expired', async () => {

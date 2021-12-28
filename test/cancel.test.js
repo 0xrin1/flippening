@@ -33,12 +33,15 @@ describe('cancel', function () {
             owner.address,
             60,
             60,
-            erc20.address,
             wavax.address,
             joeRouter.address,
             joeFactory.address,
         );
         await flippening.deployed();
+
+        const FLIP = await ethers.getContractFactory('FLIP');
+        flip = await FLIP.deploy(flippening.address);
+        await flip.deployed();
     });
 
     it('Creator funds returned if cancelled with no guess', async () => {

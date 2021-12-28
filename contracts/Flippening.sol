@@ -373,7 +373,7 @@ contract Flippening {
 
         flipsToken.mint(address(this), flipAmount);
 
-        flipsToken.approve(address(joeRouter), flipAmount); // use same amonut of flips as avax tokens
+        flipsToken.approve(address(joeRouter), flipAmount);
         WAVAXToken.approve(address(joeRouter), avaxAmount);
 
         return joeRouter.addLiquidity(

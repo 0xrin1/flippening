@@ -33,12 +33,17 @@ describe('settle', function () {
             owner.address,
             60,
             60,
-            erc20.address,
             wavax.address,
             joeRouter.address,
             joeFactory.address,
         );
         await flippening.deployed();
+
+        const FLIP = await ethers.getContractFactory('FLIP');
+        flip = await FLIP.deploy(flippening.address);
+        await flip.deployed();
+
+        await flippening.setFlipsAddress(flip.address);
     });
 
     it('Should emit a settled event when guess and secret are the same', async () => {
