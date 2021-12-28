@@ -57,7 +57,7 @@ contract Flippening {
 
     event Settled(uint indexed index, address indexed settler, bool indexed creatorWon);
 
-    event Reward(uint indexed index, uint indexed amount);
+    // event Reward(uint indexed index, uint indexed amount);
 
     event Cancelled(uint indexed index);
 
@@ -243,7 +243,7 @@ contract Flippening {
 
         emit Settled(id, msg.sender, creatorWon);
 
-        reward(id, token);
+        // reward(id, token);
     }
 
     /// Settle a flip that has expired. Anyone can do this.
@@ -266,18 +266,18 @@ contract Flippening {
 
         emit Settled(id, msg.sender, creatorWon);
 
-        reward(id, token);
+        // reward(id, token);
     }
 
     /// Send reward to guesser and emit Reward event.
-    function reward(uint id, IERC20 token) private {
-        // 1% reward
-        uint rewardAmount = protocolFee(id);
+    // function reward(uint id, IERC20 token) private {
+    //     // 1% reward
+    //     uint rewardAmount = protocolFee(id);
 
-        token.transfer(flips[id].guesser, rewardAmount);
+    //     token.transfer(flips[id].guesser, rewardAmount);
 
-        emit Reward(id, rewardAmount);
-    }
+    //     emit Reward(id, rewardAmount);
+    // }
 
     /// Calculate reward amount for guesser.
     function protocolFee(uint id) private view returns (uint) {

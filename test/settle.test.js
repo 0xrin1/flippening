@@ -121,28 +121,28 @@ describe('settle', function () {
             .withArgs(0, owner.address, false);
     });
 
-    it('Should emit a Reward event indicating the reward paid out to the guesser', async () => {
-        await erc20.approve(
-            flippening.address,
-            ethers.utils.parseEther('2'),
-        );
+    // it('Should emit a Reward event indicating the reward paid out to the guesser', async () => {
+    //     await erc20.approve(
+    //         flippening.address,
+    //         ethers.utils.parseEther('2'),
+    //     );
 
-        const secret = `${randomSecretWord()} true`;
+    //     const secret = `${randomSecretWord()} true`;
 
-        await flippening.create(
-            await sha256(secret),
-            erc20.address,
-            ethers.utils.parseEther('1'),
-        );
+    //     await flippening.create(
+    //         await sha256(secret),
+    //         erc20.address,
+    //         ethers.utils.parseEther('1'),
+    //     );
 
-        await flippening.guess(0, 'false');
+    //     await flippening.guess(0, 'false');
 
-        await network.provider.send('evm_increaseTime', [3600]);
+    //     await network.provider.send('evm_increaseTime', [3600]);
 
-        await expect(flippening.settle(0, secret))
-            .to.emit(flippening, 'Reward')
-            .withArgs(0, ethers.utils.parseEther('0.01'));
-    });
+    //     await expect(flippening.settle(0, secret))
+    //         .to.emit(flippening, 'Reward')
+    //         .withArgs(0, ethers.utils.parseEther('0.01'));
+    // });
 
     it('Creator loses when settling expired flip with guess. Should have claimed before expiry + grace.', async () => {
         await erc20.approve(
