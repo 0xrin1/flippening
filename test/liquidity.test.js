@@ -96,7 +96,7 @@ describe('liquidity', function () {
         // await flippening.convertToWAVAX(flip.address, ethers.utils.parseEther('0.5'));
     });
 
-    it.only('provideLiquidity() function should not change price ', async () => {
+    it('provideLiquidity() function should not change price ', async () => {
         // Provide liquidity so that pair is created
         await flippening.provideLiquidity(ethers.utils.parseEther('1000'));
 
@@ -116,8 +116,6 @@ describe('liquidity', function () {
             flippening.address,
             99999999999999, // some large number that is not going to hit the limit TODO: use actual block number in test
         );
-
-        console.log('response', response);
 
         const flipAndGuess = async (index) => {
             await erc20.approve(
