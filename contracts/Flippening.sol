@@ -319,41 +319,37 @@ contract Flippening {
 
         console.log('index', index);
 
+        // Get amount of flips that should be minted this iteration
         uint256 tokenAmount = rewardCurve(flips.length);
-
         console.log('tokenAmount', tokenAmount);
 
-        uint256 mintVal = flipsWethQuote(tokenAmount);
+        // Get value of half the minted flips
+        uint256 feeVal = flipsWethQuote(tokenAmount.div(2));
+        console.log('feeVal wei', feeVal);
 
-        console.log('mintVal', mintVal);
+        // Express the value of the minted flips in the token used to flip
+        uint256 feeInERC20 = determineERC20WithEqualValue(feeVal, flip.token);
+        console.log('feeinERC20', feeInERC20);
 
-        uint256 fee = protocolFee(index);
+        // Provide liquidity with half of the absorbed fee.
+        uint256[] memory amounts = convertToWAVAX(feeInERC20, flip.token);
+        uint256 avaxAmount = amounts[1];
 
-        console.log('fee', fee);
+        console.log('processFees avaxAmount', avaxAmount);
 
-        uint256 feeValue = wethQuote(fee, flip.token);
-
-        console.log('feeValue', feeValue);
-
-        uint256 valueDiff;
-        if (mintVal > feeValue) {
-            valueDiff = mintVal.sub(feeValue);
-        } else {
-            console.log('less than zero bro');
-        }
-
-        console.log('valueDiff', valueDiff);
-
-        // uint256 feeValue = flipVal
-
-        // uint256[] memory amounts = convertToWAVAX(flip.token, fee);
-        // uint256 avaxAmount = amounts[1];
-
-        // (uint amountFlips, uint amountAvax, uint liq) = provideLiquidity(avaxAmount);
+        (uint amountFlips, uint amountAvax, uint liq) = provideLiquidity(avaxAmount);
 
         // console.log('amountFlips', amountFlips);
         // console.log('amountAvax', amountAvax);
         // console.log('liq', liq);
+
+        // Send the other half of the minted flips
+
+        console.log('-------');
+
+        // uint256 feeValue = wethQuote(fee, flip.token);
+
+        // uint256 feeValue = flipVal
     }
 
     // Determine liquidity pair for flips and wavax tokens and create if null address returned.
@@ -395,8 +391,40 @@ contract Flippening {
 
         (uint256 reserveInput, uint256 reserveOutput, ) = pair.getReserves();
 
+        console.log('flipsWethQuote reserveInput', reserveInput);
+        console.log('flipsWethQuote reserveOutput', reserveOutput);
+
         // TODO: Check decimal and use properly
-        return JoeLibrary.getAmountOut(1e18, reserveInput, reserveOutput);
+        return JoeLibrary.getAmountOut(amount, reserveInput, reserveOutput);
+    }
+
+    /// Determine how many Flip tokens are equal in value to the provided amount of avax tokens.
+    function determineERC20WithEqualValue(uint256 avaxAmount, address token) private returns (uint256 amount) {
+        IJoePair pair = getWethPair(token);
+
+        console.log('determine pair with equal value', address(pair));
+
+        (uint256 reserveInput, uint256 reserveOutput, ) = pair.getReserves();
+
+        console.log('determine pair with equal value reserveInput', reserveInput);
+        console.log('determine pair with equal value reserveOutput', reserveOutput);
+
+        if (reserveInput == 0 && reserveOutput == 0) {
+            console.log('liquidity pair has no reserves');
+
+            // If there is no liquidity, provide liquidity with same value between AVAX and Flip.
+            return avaxAmount;
+        }
+
+        console.log('determineERC20WithEqualValue avaxAmount', avaxAmount);
+
+        // TODO: Find more elegant way to sort pair in correct direction, automatically.
+        if (pair.token0() == token) {
+            return JoeLibrary.getAmountOut(avaxAmount, reserveOutput, reserveInput);
+        }
+        // return JoeLibrary.quote(avaxAmount, reserveInput, reserveOutput);
+        // return JoeLibrary.getAmountOut(avaxAmount, reserveInput, reserveOutput);
+        return JoeLibrary.getAmountOut(avaxAmount, reserveInput, reserveOutput);
     }
 
     /// Determine how many Flip tokens are equal in value to the provided amount of avax tokens.
@@ -406,9 +434,13 @@ contract Flippening {
         (uint256 reserveInput, uint256 reserveOutput, ) = pair.getReserves();
 
         if (reserveInput == 0 && reserveOutput == 0) {
+            console.log('liquidity pair has no reserves');
+
             // If there is no liquidity, provide liquidity with same value between AVAX and Flip.
             return avaxAmount;
         }
+
+        console.log('avaxAmount', avaxAmount);
 
         return JoeLibrary.quote(avaxAmount, reserveInput, reserveOutput);
         // return JoeLibrary.getAmountOut(avaxAmount, reserveInput, reserveOutput);
@@ -424,7 +456,11 @@ contract Flippening {
             uint liq
         )
     {
+        console.log('provideLiquidity avaxAmount', avaxAmount);
+
         uint256 flipAmount = determineFlipWithEqualValue(avaxAmount);
+
+        console.log('flipAmount being minted', flipAmount);
 
         flipsToken.mint(address(this), flipAmount);
 
@@ -434,10 +470,10 @@ contract Flippening {
         return joeRouter.addLiquidity(
             address(flipsToken), // tokenA address (flips)
             address(WAVAXToken), // tokenB address (wavax)
-            avaxAmount, // tokenB amount desired
             flipAmount, // flip token <- just use same value as avax amount since the contract can mint unlimited supply
-            avaxAmount, // tokenB amount min (wavax)
+            avaxAmount, // tokenB amount desired
             flipAmount, // tokenA amount min (flips)
+            avaxAmount, // tokenB amount min (wavax)
             // owner, // to
             address(this),
             block.timestamp.add(1000)
@@ -445,7 +481,7 @@ contract Flippening {
     }
 
     /// Convert token to WAVAX
-    function convertToWAVAX(address token, uint amount) public returns (uint256[] memory amounts) {
+    function convertToWAVAX(uint amount, address token) public returns (uint256[] memory amounts) {
         address pair = joeFactory.getPair(address(flipsToken), address(WAVAXToken));
 
         require(pair != address(0), 'Cannot convert token to WAVAX. It has no existing pair.');
