@@ -49,8 +49,13 @@ describe('liquidity', function () {
 
         await flippening.setFlipsAddress(flip.address);
 
+        // await wavax.approve(
+        //     flippening.address,
+        //     ethers.utils.parseEther('1000'),
+        // );
+
         // await flip.transfer(flippening.address, ethers.utils.parseEther('1'));
-        await wavax.transfer(flippening.address, ethers.utils.parseEther('1'));
+        await wavax.transfer(flippening.address, ethers.utils.parseEther('1000'));
     });
 
     it('provideLiquidity() function should create liquidity', async () => {
@@ -91,14 +96,14 @@ describe('liquidity', function () {
         // await flippening.convertToWAVAX(flip.address, ethers.utils.parseEther('0.5'));
     });
 
-    it('provideLiquidity() function should not change price ', async () => {
+    it.only('provideLiquidity() function should not change price ', async () => {
         // Provide liquidity so that pair is created
-        await flippening.provideLiquidity(ethers.utils.parseEther('0.5'));
+        await flippening.provideLiquidity(ethers.utils.parseEther('100'));
 
-        const erc20Amount = ethers.utils.parseEther('0.5');
-        const wavaxAmount = ethers.utils.parseEther('0.5');
-        erc20.approve(joeRouter.address, erc20Amount); // use same amonut of flips as avax tokens
-        wavax.approve(joeRouter.address, wavaxAmount);
+        const erc20Amount = ethers.utils.parseEther('100000');
+        const wavaxAmount = ethers.utils.parseEther('50');
+        erc20.approve(joeRouter.address, wavaxAmount); // use same amonut of flips as avax tokens
+        wavax.approve(joeRouter.address, erc20Amount);
 
         await joeRouter.addLiquidity(
             erc20.address, // tokenA address (flips)
@@ -112,22 +117,27 @@ describe('liquidity', function () {
             99999999999999, // some large number that is not going to hit the limit TODO: use actual block number in test
         );
 
-        await erc20.approve(
-            flippening.address,
-            ethers.utils.parseEther('2'),
-        );
+        const flipAndGuess = async (index) => {
+            await erc20.approve(
+                flippening.address,
+                ethers.utils.parseEther('2'),
+            );
 
-        const secret = `${randomSecretWord()} true`;
+            const secret = `${randomSecretWord()} true`;
 
-        await flippening.create(
-            await sha256(secret),
-            erc20.address,
-            ethers.utils.parseEther('1'),
-        );
+            await flippening.create(
+                await sha256(secret),
+                erc20.address,
+                ethers.utils.parseEther('1'),
+            );
 
-        await flippening.guess(0, 'false');
+            await flippening.guess(index, 'false');
+        };
 
-        await flippening.processFees(0);
+        for (const index in [...Array(5).keys()]) {
+            await flipAndGuess(index);
+            await flippening.processFees(index);
+        };
 
         // Provide liquidity so that pair is created
         // await flippening.provideLiquidity(ethers.utils.parseEther('0.5'), ethers.utils.parseEther('0.5'));
