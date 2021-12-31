@@ -7,6 +7,7 @@ const FlipABI = require('../artifacts/contracts/ERC20.sol/ERC20Basic.json');
 const WavaxABI = require('../artifacts/contracts/ERC20.sol/ERC20Basic.json');
 const JoeRouterABI = require('../artifacts/@traderjoe-xyz/core/contracts/traderjoe/JoeRouter02.sol/JoeRouter02.json');
 const JoeFactoryABI = require('../artifacts/@traderjoe-xyz/core/contracts/traderjoe/JoeFactory.sol/JoeFactory.json');
+const { sha256, randomSecretWord } = require('../test/base/helpers');
 const addresses = require('../config/addresses');
 
 console.log('simulate contract usage', addresses);
@@ -46,14 +47,47 @@ let joeFactory;
     let joeFactoryUnsigned = new Contract(addresses.joeFactory.local, JoeFactoryABI.abi, provider);
     joeFactory = joeFactoryUnsigned.connect(signer);
 
-    await wavax.transfer(flippening.address, ethers.utils.parseEther('1000'));
+    // check if there is liquidity
+    let erc20WavaxPair = await getWavaxPair(erc20.address);
 
-    console.log('after avax transfer');
+    if (parseInt(erc20WavaxPair) === 0) {
+        await wavax.approve(flippening.address, ethers.utils.parseEther('1000'));
+        await wavax.transfer(flippening.address, ethers.utils.parseEther('1000'));
 
-    await provideLiquidity(flippening, erc20, wavax, flip);
+        await provideLiquidity(flippening, erc20, wavax, flip);
+    }
 
-    console.log('liquidity provided');
+    erc20WavaxPair = await getWavaxPair(erc20.address);
+
+    await erc20.approve(flippening.address, utils.parseEther('2'));
+
+    const secret = randomSecretWord();
+    const secretWord = `${secret} true`;
+
+    await flippening.create(
+        await sha256(secretWord),
+        erc20.address,
+        utils.parseEther('1'),
+    );
+
+    // check how many flips there are
+    const createdEventFilter = flippening.filters.Created();
+    let createdEvents = await flippening.queryFilter(createdEventFilter);
+    const latestFlipIndex = createdEvents.length - 1;
+
+    await flippening.guess(latestFlipIndex, 'false');
+    await flippening.settle(latestFlipIndex, secretWord);
+
+    provider.destroy();
 })();
+
+async function getWavaxPair(address) {
+    if (parseInt(address) > parseInt(wavax.address)) {
+        return joeFactory.getPair(wavax.address, address);
+    }
+
+    return joeFactory.getPair(address, wavax.address);
+}
 
 async function provideLiquidity() {
     // Provide liquidity so that Flip pair is created

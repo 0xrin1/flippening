@@ -177,6 +177,8 @@ contract Flippening {
 
         token.transferFrom(msg.sender, address(this), amount);
 
+        console.log('flips.length', flips.length);
+
         emit Created(flips.length - 1, msg.sender, tokenAddress, amount);
     }
 
