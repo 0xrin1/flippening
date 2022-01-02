@@ -246,6 +246,8 @@ contract Flippening {
 
         flips[id].settled = true;
 
+        processFees(id);
+
         emit Settled(id, msg.sender, creatorWon);
 
         // reward(id, token);
