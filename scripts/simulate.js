@@ -3,8 +3,8 @@ require('dotenv').config();
 const { ethers, Contract, BigNumber, utils } = require('ethers');
 const flippeningABI = require('../artifacts/contracts/Flippening.sol/Flippening.json');
 const ERC20ABI = require('../artifacts/contracts/ERC20.sol/ERC20Basic.json');
-const FlipABI = require('../artifacts/contracts/ERC20.sol/ERC20Basic.json');
-const WavaxABI = require('../artifacts/contracts/ERC20.sol/ERC20Basic.json');
+const FlipABI = require('../artifacts/contracts/ERC20.sol/FLIP.json');
+const WavaxABI = require('../artifacts/contracts/ERC20.sol/WAVAX.json');
 const JoeRouterABI = require('../artifacts/@traderjoe-xyz/core/contracts/traderjoe/JoeRouter02.sol/JoeRouter02.json');
 const JoeFactoryABI = require('../artifacts/@traderjoe-xyz/core/contracts/traderjoe/JoeFactory.sol/JoeFactory.json');
 const { sha256, randomSecretWord } = require('../test/base/helpers');
@@ -58,6 +58,11 @@ let joeFactory;
     }
 
     erc20WavaxPair = await getWavaxPair(erc20.address);
+    console.log('erc20 wavax pair', erc20WavaxPair);
+
+    // check if there is liquidity
+    let flipWavaxPair = await getWavaxPair(flip.address);
+    console.log('flipWavaxPair', flipWavaxPair);
 
     await erc20.approve(flippening.address, utils.parseEther('2'));
 
@@ -77,6 +82,8 @@ let joeFactory;
 
     await flippening.guess(latestFlipIndex, 'false');
     await flippening.settle(latestFlipIndex, secretWord);
+
+    console.log('blockNumber', await provider.getBlockNumber());
 
     provider.destroy();
 })();
