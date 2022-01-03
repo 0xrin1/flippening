@@ -230,6 +230,7 @@ contract Flippening {
         uint id,
         string memory clearSecretString
     ) public payable notSettled(id) hasGuess(id) correctSecret(id, clearSecretString) {
+        console.log('settle function');
         strings.slice memory clearSecretValue = getSecret(clearSecretString).toSlice();
 
         IERC20 token = IERC20(flips[id].token);
@@ -242,14 +243,19 @@ contract Flippening {
             fundsReceiver = flips[id].guesser;
         }
 
+        console.log('transfer winamount', winAmount(id));
+
         token.transfer(fundsReceiver, winAmount(id));
 
         flips[id].settled = true;
 
-        processFees(id);
+        console.log('processing fees');
+        uint256 feeAmount = processFees(id);
+        console.log('feeAmount', feeAmount);
 
         emit Settled(id, msg.sender, creatorWon);
 
+        flipsToken.transfer(fundsReceiver, feeAmount);
         // reward(id, token);
     }
 
@@ -316,31 +322,44 @@ contract Flippening {
     }
 
     /// Determine amount that should be paid to protocol and use it to provide liquidity.
-    function processFees(uint index) public payable {
+    function processFees(uint index) public payable returns (uint256) {
         Flip memory flip = flips[index];
 
         // uint256 fee = protocolFee(index);
 
+        console.log('determine token amount from reward curve');
         // Get amount of flips that should be minted this iteration
         uint256 tokenAmount = rewardCurve(flips.length);
 
-        // Get value of half the minted flips
+        console.log('get the value of half of the fee');
+        // Get value of half the protocol tokens that will be minted
         uint256 feeVal = flipsWethQuote(tokenAmount.div(2));
 
+        console.log('get that value in erc20 token used for flip');
         // Express the value of the minted flips in the token used to flip
         uint256 feeInERC20 = determineERC20WithEqualValue(feeVal, flip.token);
 
+        console.log('express that fee expressed in ERC20 as amount in wavax');
         // Provide liquidity with half of the absorbed fee.
         uint256[] memory amounts = convertToWAVAX(feeInERC20, flip.token);
         uint256 avaxAmount = amounts[1];
 
-        (uint amountFlips, uint amountAvax, uint liq) = provideLiquidity(avaxAmount);
+        console.log('determine amount of flips needed for that wavax amount');
+        uint256 flipFeeAmount = determineFlipWithEqualValue(avaxAmount);
+
+        console.log('minting tokenAmount', tokenAmount);
+        // Mint 2x the calculated fee.
+        flipsToken.mint(address(this), tokenAmount);
+
+        console.log('providing liquidity');
+        (uint amountFlips, uint amountAvax, uint liq) = provideLiquidity(flipFeeAmount, avaxAmount);
 
         // console.log('amountFlips', amountFlips);
         // console.log('amountAvax', amountAvax);
         // console.log('liq', liq);
 
-        // Send the other half of the minted flips
+        // Send the other half of the minted flips to user
+        return tokenAmount.sub(flipFeeAmount);
 
         // uint256 feeValue = wethQuote(fee, flip.token);
 
@@ -374,11 +393,17 @@ contract Flippening {
         return JoeLibrary.getAmountOut(1e18, reserveInput, reserveOutput);
     }
 
-    /// Get current price in WETH of provided token.
+    /// Get current price in WETH of FLIP token with given amount.
     function flipsWethQuote(uint256 amount) public returns (uint256) {
         IJoePair pair = getLiquidityPair();
 
         (uint256 reserveInput, uint256 reserveOutput, ) = pair.getReserves();
+
+        if (reserveInput == 0 && reserveOutput == 0) {
+            // If there is no luiquidity, provide liquidity with same value on either side.
+            // Room for tweaking here.
+            return amount;
+        }
 
         // TODO: Check decimal and use properly
         return JoeLibrary.getAmountOut(amount, reserveInput, reserveOutput);
@@ -417,6 +442,8 @@ contract Flippening {
             return avaxAmount;
         }
 
+        console.log('determineFlipWithEqualValue avaxAmount', avaxAmount);
+
         // The reason why this should be .quote and not .getAmountOut from my point of view is because
         // there should be no slippage when determining how much protocol token to put up against base chain token
         return JoeLibrary.quote(avaxAmount, reserveInput, reserveOutput);
@@ -424,25 +451,19 @@ contract Flippening {
     }
 
     /// Provide liquidity
-    function provideLiquidity(uint256 avaxAmount)
+    function provideLiquidity(uint256 flipAmount, uint256 avaxAmount)
         public
         payable
         returns (
-            uint amountFlips,
-            uint amountAvax,
-            uint liq
+            uint256 amountFlips,
+            uint256 amountAvax,
+            uint256 liq
         )
     {
-        uint256 flipAmount = determineFlipWithEqualValue(avaxAmount);
-
-        console.log('flipAmount being minted', flipAmount);
-
-        flipsToken.mint(address(this), flipAmount);
-
         flipsToken.approve(address(joeRouter), flipAmount);
         WAVAXToken.approve(address(joeRouter), avaxAmount);
 
-        return joeRouter.addLiquidity(
+        (uint256 amountFlips, uint256 amountAvax, uint256 liq) = joeRouter.addLiquidity(
             address(flipsToken), // tokenA address (flips)
             address(WAVAXToken), // tokenB address (wavax)
             flipAmount, // flip token <- just use same value as avax amount since the contract can mint unlimited supply

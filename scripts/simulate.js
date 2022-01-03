@@ -54,6 +54,8 @@ let joeFactory;
         await wavax.approve(flippening.address, ethers.utils.parseEther('1000'));
         await wavax.transfer(flippening.address, ethers.utils.parseEther('1000'));
 
+        console.log('providing liquidity for the first time');
+
         await provideLiquidity(flippening, erc20, wavax, flip);
     }
 
@@ -69,6 +71,7 @@ let joeFactory;
     const secret = randomSecretWord();
     const secretWord = `${secret} true`;
 
+    console.log('creating flip');
     await flippening.create(
         await sha256(secretWord),
         erc20.address,
@@ -80,7 +83,9 @@ let joeFactory;
     let createdEvents = await flippening.queryFilter(createdEventFilter);
     const latestFlipIndex = createdEvents.length - 1;
 
+    console.log('guessing');
     await flippening.guess(latestFlipIndex, 'false');
+    console.log('settling');
     await flippening.settle(latestFlipIndex, secretWord);
 
     console.log('blockNumber', await provider.getBlockNumber());
@@ -97,25 +102,43 @@ async function getWavaxPair(address) {
 }
 
 async function provideLiquidity() {
-    // Provide liquidity so that Flip pair is created
-    await flippening.provideLiquidity(ethers.utils.parseEther('1000'));
+    // Provide liquidity to the protocol token
+    // const flipAmount = ethers.utils.parseEther('1000');
+    // const wavaxFlipAmount = ethers.utils.parseEther('1000');
+
+    // flip.approve(joeRouter.address, flipAmount); // use same amonut of flips as avax tokens
+    // wavax.approve(joeRouter.address, wavaxFlipAmount);
+
+    // await joeRouter.addLiquidity(
+    //     flip.address, // tokenA address (flips)
+    //     wavax.address, // tokenB address (wavax)
+    //     flipAmount, // flip token <- just use same value as avax amount since the contract can mint unlimited supply
+    //     wavaxFlipAmount, // tokenB amount desired
+    //     flipAmount, // tokenA amount min (flips)
+    //     wavaxFlipAmount, // tokenB amount min (wavax)
+    //     // owner, // to
+    //     flippening.address,
+    //     99999999999999, // some large number that is not going to hit the limit TODO: use actual block number in test
+    // );
 
     // Provide liquidity to the erc20 token that we'll be using
     const erc20Amount = ethers.utils.parseEther('100000');
-    const wavaxAmount = ethers.utils.parseEther('50');
+    const wavaxERC20Amount = ethers.utils.parseEther('50');
 
     erc20.approve(joeRouter.address, erc20Amount); // use same amonut of flips as avax tokens
-    wavax.approve(joeRouter.address, wavaxAmount);
+    wavax.approve(joeRouter.address, wavaxERC20Amount);
 
-    const response = await joeRouter.addLiquidity(
+    await joeRouter.addLiquidity(
         erc20.address, // tokenA address (flips)
         wavax.address, // tokenB address (wavax)
         erc20Amount, // flip token <- just use same value as avax amount since the contract can mint unlimited supply
-        wavaxAmount, // tokenB amount desired
+        wavaxERC20Amount, // tokenB amount desired
         erc20Amount, // tokenA amount min (flips)
-        wavaxAmount, // tokenB amount min (wavax)
+        wavaxERC20Amount, // tokenB amount min (wavax)
         // owner, // to
         flippening.address,
         99999999999999, // some large number that is not going to hit the limit TODO: use actual block number in test
     );
+
+    console.log('liquidity added');
 }
