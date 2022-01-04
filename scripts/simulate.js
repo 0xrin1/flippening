@@ -66,29 +66,31 @@ let joeFactory;
     let flipWavaxPair = await getWavaxPair(flip.address);
     console.log('flipWavaxPair', flipWavaxPair);
 
-    await erc20.approve(flippening.address, utils.parseEther('2'));
+    for (const i in [...Array(1000)]) {
+        await erc20.approve(flippening.address, utils.parseEther('2'));
 
-    const secret = randomSecretWord();
-    const secretWord = `${secret} true`;
+        const secret = randomSecretWord();
+        const secretWord = `${secret} true`;
 
-    console.log('creating flip');
-    await flippening.create(
-        await sha256(secretWord),
-        erc20.address,
-        utils.parseEther('1'),
-    );
+        console.log('creating flip');
+        await flippening.create(
+            await sha256(secretWord),
+            erc20.address,
+            utils.parseEther('1'),
+        );
 
-    // check how many flips there are
-    const createdEventFilter = flippening.filters.Created();
-    let createdEvents = await flippening.queryFilter(createdEventFilter);
-    const latestFlipIndex = createdEvents.length - 1;
+        // check how many flips there are
+        const createdEventFilter = flippening.filters.Created();
+        let createdEvents = await flippening.queryFilter(createdEventFilter);
+        const latestFlipIndex = createdEvents.length - 1;
 
-    console.log('guessing');
-    await flippening.guess(latestFlipIndex, 'false');
-    console.log('settling');
-    await flippening.settle(latestFlipIndex, secretWord);
+        console.log('guessing');
+        await flippening.guess(latestFlipIndex, 'false');
+        console.log('settling');
+        await flippening.settle(latestFlipIndex, secretWord);
 
-    console.log('blockNumber', await provider.getBlockNumber());
+        console.log('blockNumber', await provider.getBlockNumber());
+    }
 
     provider.destroy();
 })();
