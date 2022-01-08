@@ -130,17 +130,21 @@ async function provideLiquidity() {
     erc20.approve(joeRouter.address, erc20Amount); // use same amonut of flips as avax tokens
     wavax.approve(joeRouter.address, wavaxERC20Amount);
 
-    await joeRouter.addLiquidity(
-        erc20.address, // tokenA address (flips)
-        wavax.address, // tokenB address (wavax)
-        erc20Amount, // flip token <- just use same value as avax amount since the contract can mint unlimited supply
-        wavaxERC20Amount, // tokenB amount desired
-        erc20Amount, // tokenA amount min (flips)
-        wavaxERC20Amount, // tokenB amount min (wavax)
-        // owner, // to
-        flippening.address,
-        99999999999999, // some large number that is not going to hit the limit TODO: use actual block number in test
-    );
+    try {
+        await joeRouter.addLiquidity(
+            erc20.address, // tokenA address (flips)
+            wavax.address, // tokenB address (wavax)
+            erc20Amount, // flip token <- just use same value as avax amount since the contract can mint unlimited supply
+            wavaxERC20Amount, // tokenB amount desired
+            erc20Amount, // tokenA amount min (flips)
+            wavaxERC20Amount, // tokenB amount min (wavax)
+            // owner, // to
+            flippening.address,
+            99999999999999, // some large number that is not going to hit the limit TODO: use actual block number in test
+        );
+    } catch(e) {
+        console.error('AddLiquidity failed', e);
+    }
 
     console.log('liquidity added');
 }
