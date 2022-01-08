@@ -64,6 +64,10 @@ let joeFactory;
 
     // check if there is liquidity
     let flipWavaxPair = await getWavaxPair(flip.address);
+    if (parseInt(flipWavaxPair) === 0) {
+        await createWavaxPair(flip.address);
+        flipWavaxPair = await getWavaxPair(flip.address);
+    }
     console.log('flipWavaxPair', flipWavaxPair);
 
     for (const i in [...Array(1000)]) {
@@ -94,6 +98,10 @@ let joeFactory;
 
     provider.destroy();
 })();
+
+async function createWavaxPair(address) {
+	return await joeFactory.createPair(address, wavax.address);
+}
 
 async function getWavaxPair(address) {
     if (parseInt(address) > parseInt(wavax.address)) {
