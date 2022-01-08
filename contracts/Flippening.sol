@@ -317,7 +317,9 @@ contract Flippening {
 
 	/// Determine amount of protocol token that should be minted for Flip generation.
 	function rewardCurve(uint index) private returns (uint) {
-		return (10 ** 18).div(2 ** index);
+		// return (10 ** 18).div(2 ** index);
+		// return (10 ** 18).div(index ** 2);
+		return (10 ** 18).div(Math.sqrt(index));
 	}
 
 	/// Determine amount that should be paid to protocol and use it to provide liquidity.
