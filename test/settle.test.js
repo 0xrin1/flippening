@@ -199,8 +199,6 @@ describe('settle', function () {
             ethers.utils.parseEther('1'),
         );
 
-        const secret = `${randomSecretWord()} true`;
-
         await flippening.guess(0, 'true');
 
         await flippening.settle(0, secret);

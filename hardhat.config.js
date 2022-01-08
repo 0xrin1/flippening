@@ -28,8 +28,8 @@ module.exports = {
         settings: {
             optimizer: {
                 enabled: true,
-                runs: 200
-            }
+                runs: 20,
+            },
         },
     },
     watcher: {
@@ -65,6 +65,16 @@ module.exports = {
                 process.env.LOCAL_PRIV_KEY,
             ],
             hardfork: 'london',
+            allowUnlimitedContractSize: true,
+        },
+        hardhat: {
+            // url: process.env.LOCAL_RPC_URL,
+            accounts: [{
+                privateKey: process.env.LOCAL_PRIV_KEY,
+                balance: '9999999999999999999999999',
+            }],
+            hardfork: 'london',
+            allowUnlimitedContractSize: true,
         },
     },
 };
