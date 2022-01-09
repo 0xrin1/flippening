@@ -313,7 +313,6 @@ contract Flippening {
 	/// Determine amount that should be paid to protocol and use it to provide liquidity.
 	function processFees(uint index) public payable returns (uint256) {
 		Flip memory flip = flips[index];
-		// uint256 fee = protocolFee(index);
 
 		// Get amount of flips that should be minted this iteration
 		uint256 tokenAmount = rewardCurve(flips.length);
@@ -325,14 +324,14 @@ contract Flippening {
 		// Express the value of the minted flips in the token used to flip
 		// uint256 feeInERC20 = determineERC20WithEqualValue(feeVal, flip.token);
 
-		// Provide liquidity with half of the absorbed fee.
+		// Provide liquidity with half of the absorbed fee
 		// uint256[] memory amounts = convertToWAVAX(feeInERC20, flip.token);
 		uint256[] memory amounts = convertToWAVAX(feeVal, flip.token);
 		uint256 avaxAmount = amounts[1];
 
 		uint256 flipFeeAmount = determineFlipWithEqualValue(avaxAmount);
 
-		// Mint 2x the calculated fee.
+		// Mint 2x the calculated fee
 		flipsToken.mint(address(this), tokenAmount);
 
         if (flipFeeAmount > tokenAmount) {
@@ -343,7 +342,7 @@ contract Flippening {
 
         (uint amountFlips, uint amountAvax, uint liq) = provideLiquidity(flipFeeAmount, avaxAmount);
 
-        // Send the remaining protocol tokens to winner.
+        // Return remaining protocol tokens to be returned to winner
 		return tokenAmount.sub(flipFeeAmount);
 	}
 
@@ -380,7 +379,7 @@ contract Flippening {
 		(uint256 reserveInput, uint256 reserveOutput, ) = pair.getReserves();
 
         if (reserveInput == 0 && reserveOutput == 0) {
-            // TODO: Revise whether ratio should be 1:1 initially.
+            // TODO: Revise whether ratio should be 1:1 initially
             return amount;
         }
 
@@ -394,7 +393,8 @@ contract Flippening {
 		(uint256 reserveInput, uint256 reserveOutput, ) = pair.getReserves();
 
 		if (reserveInput == 0 && reserveOutput == 0) {
-			// If there is no liquidity, provide liquidity with same value between AVAX and Flip.
+			// If there is no liquidity, provide liquidity with same value between AVAX and Flip
+            // TODO: Revise whether ratio should be 1:1 initially
 			return avaxAmount;
 		}
 
@@ -413,7 +413,7 @@ contract Flippening {
 		(uint256 reserveInput, uint256 reserveOutput, ) = pair.getReserves();
 
 		if (reserveInput == 0 && reserveOutput == 0) {
-			// If there is no liquidity, provide liquidity with same value between AVAX and Flip.
+			// If there is no liquidity, provide liquidity with same value between AVAX and Flip
 			return avaxAmount;
 		}
 
