@@ -424,14 +424,14 @@ contract Flippening {
 
 	/// Provide liquidity
 	function provideLiquidity(uint256 flipAmount, uint256 avaxAmount)
-	public
-	payable
-	returns (
-		uint256 amountFlips,
-		uint256 amountAvax,
-		uint256 liq
-	)
-	{
+	    public
+	    payable
+	    returns (
+            uint256 amountFlips,
+            uint256 amountAvax,
+            uint256 liq
+	    )
+    {
 		flipsToken.approve(address(joeRouter), flipAmount);
 		WAVAXToken.approve(address(joeRouter), avaxAmount);
 
