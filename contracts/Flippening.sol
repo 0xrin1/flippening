@@ -31,7 +31,7 @@ contract Flippening {
 		bool settled;
 	}
 
-	uint public MAX_TOKEN_SUPPLY = 420000000000000000000;
+	uint public MAX_TOKEN_SUPPLY = 420000000;
 
 	uint private defaultExpiry;
 
@@ -317,7 +317,8 @@ contract Flippening {
 
 	/// Determine amount of protocol token that should be minted for Flip generation.
 	function rewardCurve(uint index) private returns (uint) {
-        return (Math.sqrt(MAX_TOKEN_SUPPLY.mul(2)).sub(1)).mul(10 ** 18);
+        // return (Math.sqrt(MAX_TOKEN_SUPPLY.mul(2)).sub(1));
+        return (Math.sqrt(MAX_TOKEN_SUPPLY.mul(2)).sub(index)).mul(10 ** 18);
 	}
 
 	/// Determine amount that should be paid to protocol and use it to provide liquidity.

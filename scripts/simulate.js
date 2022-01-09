@@ -70,7 +70,7 @@ let joeFactory;
     }
     console.log('flipWavaxPair', flipWavaxPair);
 
-    for (const i in [...Array(1000)]) {
+    for (const i in [...Array(4000)]) {
         await erc20.approve(flippening.address, utils.parseEther('2'));
 
         const secret = randomSecretWord();
