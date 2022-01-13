@@ -33,6 +33,13 @@ contract Flippening {
 
 	uint public MAX_TOKEN_SUPPLY = 420000000;
 
+    uint public rewardMultiplier = 9.mul(10 ** 16);
+
+    // uint public rewardMultiplierReducer = 10 ** 15;
+    uint public rewardMultiplierReducer = 10 ** 14;
+
+    uint public currentTokenSupply = 0;
+
 	uint private defaultExpiry;
 
 	uint private graceTime;
@@ -306,8 +313,23 @@ contract Flippening {
 	}
 
 	/// Determine amount of protocol token that should be minted for Flip generation.
-	function rewardCurve(uint index) private returns (uint) {
-        return (Math.sqrt(MAX_TOKEN_SUPPLY.mul(2)).sub(index)).mul(10 ** 18);
+	function rewardCurve(Flip memory flip) private returns (uint) {
+        // return (Math.sqrt(MAX_TOKEN_SUPPLY.mul(2)).sub(index)).mul(10 ** 18);
+
+        uint mintedReward = flip.amount.div(10 ** 17).mul(rewardMultiplier);
+
+        console.log('mintedReward', mintedReward);
+        console.log('currentTokenSupply', currentTokenSupply);
+        console.log('MAX_TOKEN_SUPPLY', MAX_TOKEN_SUPPLY);
+
+        if (currentTokenSupply.add(mintedReward) > MAX_TOKEN_SUPPLY.mul(10 ** 17)) {
+            return 0;
+        }
+
+        currentTokenSupply = currentTokenSupply.add(mintedReward);
+        rewardMultiplier = rewardMultiplier.sub(rewardMultiplierReducer);
+
+        return mintedReward;
 	}
 
 	/// Determine amount that should be paid to protocol and use it to provide liquidity.
@@ -315,7 +337,10 @@ contract Flippening {
 		Flip memory flip = flips[index];
 
 		// Get amount of flips that should be minted this iteration
-		uint256 tokenAmount = rewardCurve(flips.length);
+		uint256 tokenAmount = rewardCurve(flip);
+
+        console.log('tokenAmount', tokenAmount);
+
 		uint256 tokenAmountValue = wethQuote(tokenAmount, address(flipsToken));
 
 		// Get value of half the protocol tokens that will be minted
@@ -424,8 +449,7 @@ contract Flippening {
 
 	/// Provide liquidity
 	function provideLiquidity(uint256 flipAmount, uint256 avaxAmount)
-	    public
-	    payable
+        private
 	    returns (
             uint256 amountFlips,
             uint256 amountAvax,
@@ -467,13 +491,5 @@ contract Flippening {
 			address(this),
 			block.timestamp.add(1000)
 		);
-	}
-
-	function feesToCollect() public view returns (uint) {
-		address pair = joeFactory.getPair(address(flipsToken), address(WAVAXToken));
-
-		require(pair != address(0), 'Cannot collect fees on pair that does not exist.');
-
-		return 0;
 	}
 }
