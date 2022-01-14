@@ -39,7 +39,6 @@ abstract contract InteractsWithDEX {
 		address joeRouterAddress
 	) {
         owner = _owner;
-		// flipsToken = _flipsToken;
 		WAVAXToken = IERC20(WAVAXAddress);
 		joeRouter = IJoeRouter02(joeRouterAddress);
 		joeFactory = IJoeFactory(joeRouter.factory());
@@ -47,7 +46,6 @@ abstract contract InteractsWithDEX {
 
 	function setFlipsAddress(address _flipsAddress) public onlyOwner {
 		flipsToken = IFLIP(_flipsAddress);
-        // dex = new DEX(WAVAXToken, flipsToken, joeRouter, joeFactory);
 	}
 
 	// Determine liquidity pair for flips and wavax tokens and create if null address returned.
@@ -62,22 +60,22 @@ abstract contract InteractsWithDEX {
 	}
 
 	/// Get WETH pair of provided token.
-	function getWethPair(address token) internal view returns (IJoePair) {
+	function getPair(address token) internal view returns (IJoePair) {
 		(address tokenA, address tokenB) = JoeLibrary.sortTokens(token, address(WAVAXToken));
 		return IJoePair(joeFactory.getPair(tokenA, tokenB));
 	}
 
     /// Get pair via address.
-    function getPair(address token) public payable returns (IJoePair) {
+    function getAndCreatePair(address token) public payable returns (IJoePair) {
 		if (address(flipsToken) == token) {
 		    return getLiquidityPair();
 		}
 
-		return getWethPair(token);
+		return getPair(token);
     }
 
 	/// Get current price in WETH of provided token.
-	function wethQuote(uint256 amount, address token) public payable returns (uint256) {
+	function wethQuote(uint256 amount, address token) public view returns (uint256) {
         IJoePair pair = getPair(token);
 
 		(uint256 reserveInput, uint256 reserveOutput, ) = pair.getReserves();
@@ -88,16 +86,16 @@ abstract contract InteractsWithDEX {
         }
 
 		// TODO: Find more elegant way to sort pair in correct direction, automatically.
-		if (pair.token1() == token) {
-			return JoeLibrary.getAmountOut(amount, reserveOutput, reserveInput);
+		if (pair.token0() == token) {
+			return JoeLibrary.quote(amount, reserveOutput, reserveInput);
 		}
 
 		return JoeLibrary.quote(amount, reserveInput, reserveOutput);
 	}
 
 	/// Determine how many ERC20 tokens are equal in value to the provided amount of avax tokens.
-	function determineERC20WithEqualValue(uint256 avaxAmount, address token, bool quote) public payable returns (uint256 amount) {
-        IJoePair pair = getPair(token);
+	function determineERC20WithEqualValue(uint256 avaxAmount, address token) public payable returns (uint256 amount) {
+        IJoePair pair = getAndCreatePair(token);
 
 		(uint256 reserveInput, uint256 reserveOutput, ) = pair.getReserves();
 
@@ -109,18 +107,10 @@ abstract contract InteractsWithDEX {
 
 		// TODO: Find more elegant way to sort pair in correct direction, automatically.
 		if (pair.token0() == token) {
-            if (quote) {
-			    return JoeLibrary.quote(avaxAmount, reserveOutput, reserveInput);
-            }
-
-			return JoeLibrary.getAmountOut(avaxAmount, reserveOutput, reserveInput);
+			return JoeLibrary.quote(avaxAmount, reserveOutput, reserveInput);
 		}
 
-        if (quote) {
-		    return JoeLibrary.quote(avaxAmount, reserveInput, reserveOutput);
-        }
-
-		return JoeLibrary.getAmountOut(avaxAmount, reserveInput, reserveOutput);
+		return JoeLibrary.quote(avaxAmount, reserveInput, reserveOutput);
 	}
 
 	/// Provide liquidity

@@ -310,7 +310,7 @@ contract Flippening is InteractsWithDEX {
 		uint256 avaxAmount = convertToWAVAX(feeVal, flip.token)[1];
 
 		// Express the value of the minted flips in the token used to flip
-		uint256 flipFeeAmount = determineERC20WithEqualValue(avaxAmount, address(flipsToken), true);
+		uint256 flipFeeAmount = determineERC20WithEqualValue(avaxAmount, address(flipsToken));
 
 		// Mint reward curve amount.
 		flipsToken.mint(address(this), tokenAmount);

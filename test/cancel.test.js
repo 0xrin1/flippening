@@ -49,11 +49,7 @@ describe('cancel', function () {
             ethers.utils.parseEther('3'),
         );
 
-        console.log('erc20 approved');
-
         const balance = await erc20.balanceOf(owner.address);
-
-        console.log('balance', balance);
 
         const secret = `${randomSecretWord()} true`;
 
@@ -63,11 +59,7 @@ describe('cancel', function () {
             ethers.utils.parseEther('1'),
         );
 
-        console.log('flip created');
-
         const changedBalance = await erc20.balanceOf(owner.address);
-
-        console.log('changedBalance', changedBalance);
 
         expect(changedBalance.toString()).to.equal(balance.sub(ethers.utils.parseEther('1')).toString());
 

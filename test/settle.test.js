@@ -260,10 +260,13 @@ describe('settle', function () {
 
         await flippening.settle(0, secret);
 
+        const rawWethQuote = (await flippening.wethQuote(ethers.utils.parseEther(`${flipAmount}`), flip.address)).toString();
+        const wethQuote = BigNumber.from(parseInt(ethers.utils.formatEther(rawWethQuote)).toString());
+
         const protocolSupplyAfter = await flippening.currentTokenSupply();
 
-        expect(protocolSupplyAfter.sub(protocolSupplyBefore)).to.equal(BigNumber.from(`${flipAmount}`).mul(rewardMultiplier));
+        expect(protocolSupplyAfter.sub(protocolSupplyBefore)).to.equal(wethQuote.mul(rewardMultiplier));
 
-        expect(await flip.totalSupply()).to.equal(BigNumber.from(`${flipAmount}`).mul(rewardMultiplier));
+        expect(await flip.totalSupply()).to.equal(wethQuote.mul(rewardMultiplier));
     });
 });
