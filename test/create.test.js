@@ -35,7 +35,6 @@ describe('create', function () {
             60,
             wavax.address,
             joeRouter.address,
-            joeFactory.address,
         );
         await flippening.deployed();
 

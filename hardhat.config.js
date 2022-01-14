@@ -1,6 +1,7 @@
 require('@nomiclabs/hardhat-waffle');
 require('hardhat-watcher');
 require('dotenv').config()
+// require('@eth-optimism/smock/build/src/plugins/hardhat-storagelayout')
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html

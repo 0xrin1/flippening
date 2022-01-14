@@ -1,5 +1,6 @@
 const { expect } = require('chai');
 const { sha256, randomSecretWord } = require('./base/helpers');
+const { smockit } = require("@eth-optimism/smock");
 
 describe('settle', function () {
     let owner;
@@ -8,6 +9,25 @@ describe('settle', function () {
     let joeFactory;
     let joeRouter;
     let flippening;
+
+    const provideLiquidity = async () => {
+        const erc20Amount = ethers.utils.parseEther('100000');
+        const wavaxAmount = ethers.utils.parseEther('50');
+        erc20.approve(joeRouter.address, erc20Amount); // use same amonut of flips as avax tokens
+        wavax.approve(joeRouter.address, wavaxAmount);
+
+        const response = await joeRouter.addLiquidity(
+            erc20.address, // tokenA address (flips)
+            wavax.address, // tokenB address (wavax)
+            erc20Amount, // flip token <- just use same value as avax amount since the contract can mint unlimited supply
+            wavaxAmount, // tokenB amount desired
+            erc20Amount, // tokenA amount min (flips)
+            wavaxAmount, // tokenB amount min (wavax)
+            // owner, // to
+            flippening.address,
+            99999999999999, // some large number that is not going to hit the limit TODO: use actual block number in test
+        );
+    };
 
     beforeEach(async () => {
         [ owner ] = await ethers.getSigners();
@@ -24,9 +44,16 @@ describe('settle', function () {
         joeFactory = await JoeFactory.deploy(owner.address);
         await joeFactory.deployed();
 
+        console.log('joefactory address in test', joeFactory.address);
+
+        const pairCodeHash = await joeFactory.pairCodeHash();
+        console.log('pairCodeHash', pairCodeHash); // needed to override npm package hardcoded value
+
         const JoeRouter = await ethers.getContractFactory('JoeRouter02');
         joeRouter = await JoeRouter.deploy(joeFactory.address, wavax.address);
         await joeRouter.deployed();
+
+	    // mockedJoeRouter = await smockit(joeRouter);
 
         const Flippening = await ethers.getContractFactory('Flippening');
         flippening = await Flippening.deploy(
@@ -35,7 +62,6 @@ describe('settle', function () {
             60,
             wavax.address,
             joeRouter.address,
-            joeFactory.address,
         );
         await flippening.deployed();
 
@@ -44,6 +70,8 @@ describe('settle', function () {
         await flip.deployed();
 
         await flippening.setFlipsAddress(flip.address);
+
+        await provideLiquidity();
     });
 
     it('Should emit a settled event when guess and secret are the same', async () => {
@@ -120,29 +148,6 @@ describe('settle', function () {
             .to.emit(flippening, 'Settled')
             .withArgs(0, owner.address, false);
     });
-
-    // it('Should emit a Reward event indicating the reward paid out to the guesser', async () => {
-    //     await erc20.approve(
-    //         flippening.address,
-    //         ethers.utils.parseEther('2'),
-    //     );
-
-    //     const secret = `${randomSecretWord()} true`;
-
-    //     await flippening.create(
-    //         await sha256(secret),
-    //         erc20.address,
-    //         ethers.utils.parseEther('1'),
-    //     );
-
-    //     await flippening.guess(0, 'false');
-
-    //     await network.provider.send('evm_increaseTime', [3600]);
-
-    //     await expect(flippening.settle(0, secret))
-    //         .to.emit(flippening, 'Reward')
-    //         .withArgs(0, ethers.utils.parseEther('0.01'));
-    // });
 
     it('Creator loses when settling expired flip with guess. Should have claimed before expiry + grace.', async () => {
         await erc20.approve(

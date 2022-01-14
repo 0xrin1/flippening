@@ -13,7 +13,7 @@ import '@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeFactory.sol';
 import '@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter02.sol';
 import '@traderjoe-xyz/core/contracts/traderjoe/libraries/JoeLibrary.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 contract Flippening {
 	using strings for *;
@@ -65,8 +65,6 @@ contract Flippening {
 	event Guess(uint indexed index, address indexed guesser, string indexed filterGuess, string guess);
 
 	event Settled(uint indexed index, address indexed settler, bool indexed creatorWon);
-
-	// event Reward(uint indexed index, uint indexed amount);
 
 	event Cancelled(uint indexed index);
 
@@ -146,15 +144,14 @@ contract Flippening {
 		uint _defaultExpiry,
 		uint _graceTime,
 		address _WAVAXAddress,
-		address _joeRouterAddress,
-		address _joeFactoryAddress
+		address _joeRouterAddress
 	) {
 		owner = _owner;
 		defaultExpiry = _defaultExpiry;
 		graceTime = _graceTime;
 		WAVAXToken = IERC20(_WAVAXAddress);
 		joeRouter = IJoeRouter02(_joeRouterAddress);
-		joeFactory = IJoeFactory(_joeFactoryAddress);
+		joeFactory = IJoeFactory(joeRouter.factory());
 	}
 
 	function setFlipsAddress(address _flipsAddress) public onlyOwner {
@@ -343,6 +340,8 @@ contract Flippening {
 
 		uint256 tokenAmountValue = wethQuote(tokenAmount, address(flipsToken));
 
+        console.log('tokenAmountValue', tokenAmountValue);
+
 		// Get value of half the protocol tokens that will be minted
 		// uint256 feeVal = flipsWethQuote(tokenAmount.div(2));
 		uint256 feeVal = protocolFee(index);
@@ -353,6 +352,8 @@ contract Flippening {
 		// uint256[] memory amounts = convertToWAVAX(feeInERC20, flip.token);
 		uint256[] memory amounts = convertToWAVAX(feeVal, flip.token);
 		uint256 avaxAmount = amounts[1];
+
+        console.log('avaxAmount', avaxAmount);
 
 		uint256 flipFeeAmount = determineFlipWithEqualValue(avaxAmount);
 
@@ -483,6 +484,12 @@ contract Flippening {
 		address[] memory path = new address[](2);
 		path[0] = token;
 		path[1] = address(WAVAXToken);
+
+        console.log('swapExactTokensForTokens');
+        console.log('joeRouter address', address(joeRouter));
+        console.log('pair get the pair', address(pair));
+
+        // console.log('paircodehash calculated in flippening contract', joeFactory.pairCodeHash());
 
 		return joeRouter.swapExactTokensForTokens(
 			amount,

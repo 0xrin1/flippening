@@ -35,7 +35,6 @@ describe('expire', function () {
             60,
             wavax.address,
             joeRouter.address,
-            joeFactory.address,
         );
         await flippening.deployed();
 
@@ -99,29 +98,6 @@ describe('expire', function () {
 
             counter += 1;
         }
-    });
-
-    it('Should emit a Reward event indicating the reward paid out to the guesser', async () => {
-        await erc20.approve(
-            flippening.address,
-            ethers.utils.parseEther('2'),
-        );
-
-        const secret = `${randomSecretWord()} true`;
-
-        await flippening.create(
-            await sha256(secret),
-            erc20.address,
-            ethers.utils.parseEther('1'),
-        );
-
-        await flippening.guess(0, 'false');
-
-        await network.provider.send('evm_increaseTime', [3600 * 2]);
-
-        await expect(flippening.expire(0))
-            .to.emit(flippening, 'Reward')
-            .withArgs(0, ethers.utils.parseEther('0.01'));
     });
 
     it('Rejects duplicate expire attempt gracefully', async () => {
