@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity >=0.8.0;
 
 import '../interfaces/IERC20.sol';
 import '../interfaces/IFLIP.sol';
+import '../interfaces/IsFLIP.sol';
 import '../libraries/SafeMath.sol';
+import '../ERC4626.sol';
 
 import '@traderjoe-xyz/core/contracts/traderjoe/libraries/JoeLibrary.sol';
 import '@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol';
 import '@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeFactory.sol';
 import '@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter02.sol';
+// import '@rari-capital/solmate/src/mixins/ERC4626.sol';
 
 abstract contract InteractsWithDEX {
 	using SafeMath for *;
@@ -17,6 +20,7 @@ abstract contract InteractsWithDEX {
     IERC20 WAVAXToken;
 
     IFLIP flipsToken;
+    IsFLIP sFlipsToken;
 
     IJoeRouter02 private joeRouter;
 
@@ -43,8 +47,9 @@ abstract contract InteractsWithDEX {
 		joeFactory = IJoeFactory(joeRouter.factory());
 	}
 
-	function setFlipsAddress(address _flipsAddress) public onlyOwner {
+	function setFlipsAddress(address _flipsAddress, address _sFlipsAddress) public onlyOwner {
 		flipsToken = IFLIP(_flipsAddress);
+		sFlipsToken = IsFLIP(_sFlipsAddress);
 	}
 
 	// Determine liquidity pair for flips and wavax tokens and create if null address returned.

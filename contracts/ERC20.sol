@@ -1,8 +1,7 @@
-import '@rari-capital/solmate/src/tokens/ERC20.sol';
-// import './abstract/ERC20.sol';
-
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity >=0.8.0;
+
+import '@rari-capital/solmate/src/tokens/ERC20.sol';
 
 contract ERC20Basic is ERC20 {
     constructor() ERC20("ERC20 token", "ERC", 18) {
