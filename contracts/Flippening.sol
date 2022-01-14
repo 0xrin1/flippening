@@ -223,7 +223,8 @@ contract Flippening is InteractsWithDEX {
 
 		emit Settled(id, msg.sender, creatorWon);
 
-		flipsToken.transfer(fundsReceiver, feeAmount);
+        flipsToken.approve(address(sFlipsToken), feeAmount);
+		sFlipsToken.deposit(fundsReceiver, feeAmount);
 	}
 
 	/// Settle a flip that has expired. Anyone can do this.
