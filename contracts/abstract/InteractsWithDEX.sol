@@ -2,10 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import './interfaces/IERC20.sol';
-import './interfaces/IFLIP.sol';
-
-import './libraries/SafeMath.sol';
+import '../interfaces/IERC20.sol';
+import '../interfaces/IFLIP.sol';
+import '../libraries/SafeMath.sol';
 
 import '@traderjoe-xyz/core/contracts/traderjoe/libraries/JoeLibrary.sol';
 import '@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol';

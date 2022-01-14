@@ -1,5 +1,5 @@
-import 'hardhat/console.sol';
-import './abstract/ERC20.sol';
+import '@rari-capital/solmate/src/tokens/ERC20.sol';
+// import './abstract/ERC20.sol';
 
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity >=0.8.0;

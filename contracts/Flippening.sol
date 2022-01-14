@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity >=0.8.0;
 
-import './InteractsWithDEX.sol';
+import './abstract/InteractsWithDEX.sol';
 import './ERC20.sol';
 
 import './interfaces/IERC20.sol';
