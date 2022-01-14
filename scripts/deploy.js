@@ -68,6 +68,7 @@ async function main() {
     console.log('JoeRouter deployed to:', joeRouter.address);
     console.log('Flippening deployed to:', flippening.address);
     console.log('FLIP deployed to:', flip.address);
+    console.log('sFLIP deployed to:', sFlip.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

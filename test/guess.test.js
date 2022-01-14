@@ -42,7 +42,12 @@ describe('guess', function () {
         flip = await FLIP.deploy(flippening.address);
         await flip.deployed();
 
-        await flippening.setFlipsAddress(flip.address);
+        // Create the sFLIP vault
+        const sFLIP = await hre.ethers.getContractFactory('sFLIP');
+        const sFlip = await sFLIP.deploy(flip.address, 'Staked FLIP', 'sFLIP');
+        await sFlip.deployed();
+
+        await flippening.setFlipsAddress(flip.address, sFlip.address);
     });
 
     it('Should emit a Guess event when calling the guess function', async () => {
