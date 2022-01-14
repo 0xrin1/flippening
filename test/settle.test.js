@@ -46,8 +46,6 @@ describe('settle', function () {
         joeFactory = await JoeFactory.deploy(owner.address);
         await joeFactory.deployed();
 
-        console.log('joefactory address in test', joeFactory.address);
-
         const pairCodeHash = await joeFactory.pairCodeHash();
         console.log('pairCodeHash', pairCodeHash); // needed to override npm package hardcoded value
 

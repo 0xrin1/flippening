@@ -142,9 +142,7 @@ abstract contract InteractsWithDEX {
 			avaxAmount, // tokenB amount desired
 			flipAmount, // tokenA amount min (flips)
 			avaxAmount, // tokenB amount min (wavax)
-			// owner, // to
 			address(this),
-			// address(msg.sender),
 			block.timestamp.add(1000)
 		);
 	}
@@ -171,7 +169,6 @@ abstract contract InteractsWithDEX {
 			0,
 			path,
 			address(this),
-			// address(msg.sender),
 			block.timestamp.add(1000)
 		);
 	}

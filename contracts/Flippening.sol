@@ -10,7 +10,7 @@ import './libraries/MathLib.sol';
 import './libraries/SafeMath.sol';
 import './libraries/Strings.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 contract Flippening is InteractsWithDEX {
 	using strings for *;
@@ -299,22 +299,18 @@ contract Flippening is InteractsWithDEX {
 
 		// Get amount of flips that should be minted this iteration
 		uint256 tokenAmount = rewardCurve(flip);
-        console.log('tokenAmount', tokenAmount);
 
+        // Get value in weth of minted tokenAmount
 		uint256 tokenAmountValue = wethQuote(tokenAmount, flip.token);
-        console.log('tokenAmountValue', tokenAmountValue);
 
 		// Get value of half the protocol tokens that will be minted
 		uint256 feeVal = protocolFee(index);
 
 		// Provide liquidity with half of the absorbed fee
 		uint256 avaxAmount = convertToWAVAX(feeVal, flip.token)[1];
-        console.log('avaxAmount', avaxAmount);
 
 		// Express the value of the minted flips in the token used to flip
 		uint256 flipFeeAmount = determineERC20WithEqualValue(avaxAmount, address(flipsToken), true);
-
-        console.log('flipFeeAmount', flipFeeAmount);
 
 		// Mint reward curve amount.
 		flipsToken.mint(address(this), tokenAmount);
