@@ -276,41 +276,41 @@ contract Flippening {
 	}
 
 	/// Calculate reward amount for guesser.
-	function protocolFee(uint id) private view returns (uint) {
+	function protocolFee(uint id) internal returns (uint) {
 		return flips[id].amount.mul(2).div(100).mul(2); // 2% of twice the flip amount
 	}
 
 	/// Calculate amount collected by winner.
-	function winAmount(uint id) private view returns (uint) {
+	function winAmount(uint id) internal returns (uint) {
 		uint rewardAmount = protocolFee(id);
 
 		return flips[id].amount.mul(2).sub(rewardAmount);
 	}
 
 	/// Is given flip expired?
-	function isExpired(uint id) private view returns (bool) {
+	function isExpired(uint id) internal returns (bool) {
 		return flips[id].createdAt.add(flips[id].expiry.mul(60)) <= block.timestamp;
 	}
 
 	/// Is given flip past the grace period?
-	function isPastGrace(uint id) private view returns (bool) {
+	function isPastGrace(uint id) internal returns (bool) {
 		return flips[id].createdAt.add(flips[id].expiry.mul(60)).add(graceTime.mul(60)) < block.timestamp;
 	}
 
 	/// Is given flip within the grace period?
-	function isInGrace(uint id) private view returns (bool) {
+	function isInGrace(uint id) internal returns (bool) {
 		return isExpired(id) && !isPastGrace(id);
 	}
 
 	/// Is the provided secret a valid secret?
-	function validSecret(strings.slice memory clearSecretValue) private pure returns(bool) {
+	function validSecret(strings.slice memory clearSecretValue) internal pure returns(bool) {
 		int256 secretTrue = strings.compare(clearSecretValue, 'true'.toSlice());
 		int256 secretFalse = strings.compare(clearSecretValue, 'false'.toSlice());
 		return secretTrue != 0 && secretFalse != 0;
 	}
 
 	/// Determine amount of protocol token that should be minted for Flip generation.
-	function rewardCurve(Flip memory flip) private returns (uint) {
+	function rewardCurve(Flip memory flip) internal returns (uint) {
         // return (Math.sqrt(MAX_TOKEN_SUPPLY.mul(2)).sub(index)).mul(10 ** 18);
 
         uint mintedReward = flip.amount.div(10 ** 17).mul(rewardMultiplier);
@@ -345,8 +345,6 @@ contract Flippening {
 		// Get value of half the protocol tokens that will be minted
 		// uint256 feeVal = flipsWethQuote(tokenAmount.div(2));
 		uint256 feeVal = protocolFee(index);
-		// Express the value of the minted flips in the token used to flip
-		// uint256 feeInERC20 = determineERC20WithEqualValue(feeVal, flip.token);
 
 		// Provide liquidity with half of the absorbed fee
 		// uint256[] memory amounts = convertToWAVAX(feeInERC20, flip.token);
@@ -355,17 +353,24 @@ contract Flippening {
 
         console.log('avaxAmount', avaxAmount);
 
+		// Express the value of the minted flips in the token used to flip
 		uint256 flipFeeAmount = determineFlipWithEqualValue(avaxAmount);
 
-		// Mint 2x the calculated fee
+		// Mint reward curve amount.
 		flipsToken.mint(address(this), tokenAmount);
 
+        // If the fee, when expressed in number of flips, is larger than the number of flips minted according to the reward.
         if (flipFeeAmount > tokenAmount) {
+            // Provide liquidity with flipAmount equal to the number of tokens minted vs its value in WETH.
+            // This means that some WETH is left on the table.
+            // Situation occurs when flip amount is very large and leaves the flipper no FLIP rewards.
 		    (uint amountFlips, uint amountAvax, uint liq) = provideLiquidity(tokenAmount, tokenAmountValue);
 
             return 0;
         }
 
+        // Occurs when the fee, when expressed in number of flips, is smaller or equal to the number of flips minted according to the reward.
+        // Provide liquidity equal to the entire fee collected this round.
         (uint amountFlips, uint amountAvax, uint liq) = provideLiquidity(flipFeeAmount, avaxAmount);
 
         // Return remaining protocol tokens to be returned to winner
