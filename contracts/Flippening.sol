@@ -1,21 +1,18 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity >=0.8.0;
 
+import './InteractsWithDEX.sol';
 import './ERC20.sol';
+
 import './interfaces/IERC20.sol';
 import './interfaces/IFLIP.sol';
 import './libraries/MathLib.sol';
 import './libraries/SafeMath.sol';
 import './libraries/Strings.sol';
 
-import '@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol';
-import '@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeFactory.sol';
-import '@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter02.sol';
-import '@traderjoe-xyz/core/contracts/traderjoe/libraries/JoeLibrary.sol';
-
 import 'hardhat/console.sol';
 
-contract Flippening {
+contract Flippening is InteractsWithDEX {
 	using strings for *;
 	using SafeMath for *;
 
@@ -33,24 +30,15 @@ contract Flippening {
 
 	uint public MAX_TOKEN_SUPPLY = 420000000;
 
-    uint public rewardMultiplier = 9.mul(10 ** 16);
+    uint public rewardMultiplier = 900000000000000000;
 
-    // uint public rewardMultiplierReducer = 10 ** 15;
-    uint public rewardMultiplierReducer = 10 ** 14;
+    uint public rewardMultiplierReducer = 1000000000000000;
 
     uint public currentTokenSupply = 0;
 
 	uint private defaultExpiry;
 
 	uint private graceTime;
-
-	address private owner;
-
-	IFLIP private flipsToken;
-	IERC20 private WAVAXToken;
-
-	IJoeRouter02 private joeRouter;
-	IJoeFactory private joeFactory;
 
 	Flip[] public flips;
 
@@ -68,14 +56,6 @@ contract Flippening {
 
 	event Cancelled(uint indexed index);
 
-
-	/**
-		* @dev Throws if called by any account other than the owner.
-		*/
-	modifier onlyOwner() {
-		require(owner == msg.sender, 'Ownable: caller is not the owner');
-		_;
-	}
 
 	/**
 		* @dev Throws if flip expiration has passed.
@@ -145,17 +125,9 @@ contract Flippening {
 		uint _graceTime,
 		address _WAVAXAddress,
 		address _joeRouterAddress
-	) {
-		owner = _owner;
+	) InteractsWithDEX(_owner, _WAVAXAddress, _joeRouterAddress) {
 		defaultExpiry = _defaultExpiry;
 		graceTime = _graceTime;
-		WAVAXToken = IERC20(_WAVAXAddress);
-		joeRouter = IJoeRouter02(_joeRouterAddress);
-		joeFactory = IJoeFactory(joeRouter.factory());
-	}
-
-	function setFlipsAddress(address _flipsAddress) public onlyOwner {
-		flipsToken = IFLIP(_flipsAddress);
 	}
 
 	/// Create a flip by putting up a secret and an amount to be flipped.
@@ -311,13 +283,7 @@ contract Flippening {
 
 	/// Determine amount of protocol token that should be minted for Flip generation.
 	function rewardCurve(Flip memory flip) internal returns (uint) {
-        // return (Math.sqrt(MAX_TOKEN_SUPPLY.mul(2)).sub(index)).mul(10 ** 18);
-
         uint mintedReward = flip.amount.div(10 ** 17).mul(rewardMultiplier);
-
-        console.log('mintedReward', mintedReward);
-        console.log('currentTokenSupply', currentTokenSupply);
-        console.log('MAX_TOKEN_SUPPLY', MAX_TOKEN_SUPPLY);
 
         if (currentTokenSupply.add(mintedReward) > MAX_TOKEN_SUPPLY.mul(10 ** 17)) {
             return 0;
@@ -338,7 +304,7 @@ contract Flippening {
 
         console.log('tokenAmount', tokenAmount);
 
-		uint256 tokenAmountValue = wethQuote(tokenAmount, address(flipsToken));
+		uint256 tokenAmountValue = wethQuote(tokenAmount, flip.token);
 
         console.log('tokenAmountValue', tokenAmountValue);
 
@@ -375,133 +341,5 @@ contract Flippening {
 
         // Return remaining protocol tokens to be returned to winner
 		return tokenAmount.sub(flipFeeAmount);
-	}
-
-	// Determine liquidity pair for flips and wavax tokens and create if null address returned.
-	function getLiquidityPair() private returns (IJoePair pair) {
-		address pairAddress = joeFactory.getPair(address(flipsToken), address(WAVAXToken));
-
-		if (pairAddress == address(0)) {
-			pairAddress = joeFactory.createPair(address(flipsToken), address(WAVAXToken));
-		}
-
-		return IJoePair(pairAddress);
-	}
-
-	/// Get WETH pair of provided token.
-	function getWethPair(address token) public returns (IJoePair) {
-		(address tokenA, address tokenB) = JoeLibrary.sortTokens(token, address(WAVAXToken));
-		return IJoePair(joeFactory.getPair(tokenA, tokenB));
-	}
-
-    /// Get pair via address.
-    function getPair(address token) public returns (IJoePair) {
-		if (address(flipsToken) == token) {
-		    return getLiquidityPair();
-		}
-
-		return getWethPair(token);
-    }
-
-	/// Get current price in WETH of provided token.
-	function wethQuote(uint256 amount, address token) public returns (uint256) {
-        IJoePair pair = getPair(token);
-
-		(uint256 reserveInput, uint256 reserveOutput, ) = pair.getReserves();
-
-        if (reserveInput == 0 && reserveOutput == 0) {
-            // TODO: Revise whether ratio should be 1:1 initially
-            return amount;
-        }
-
-		return JoeLibrary.quote(amount, reserveInput, reserveOutput);
-	}
-
-	/// Determine how many Flip tokens are equal in value to the provided amount of avax tokens.
-	function determineERC20WithEqualValue(uint256 avaxAmount, address token) private returns (uint256 amount) {
-		IJoePair pair = getWethPair(token);
-
-		(uint256 reserveInput, uint256 reserveOutput, ) = pair.getReserves();
-
-		if (reserveInput == 0 && reserveOutput == 0) {
-			// If there is no liquidity, provide liquidity with same value between AVAX and Flip
-            // TODO: Revise whether ratio should be 1:1 initially
-			return avaxAmount;
-		}
-
-		// TODO: Find more elegant way to sort pair in correct direction, automatically.
-		if (pair.token0() == token) {
-			return JoeLibrary.getAmountOut(avaxAmount, reserveOutput, reserveInput);
-		}
-
-		return JoeLibrary.getAmountOut(avaxAmount, reserveInput, reserveOutput);
-	}
-
-	/// Determine how many Flip tokens are equal in value to the provided amount of avax tokens.
-	function determineFlipWithEqualValue(uint256 avaxAmount) private returns (uint256 amount) {
-		IJoePair pair = getLiquidityPair();
-
-		(uint256 reserveInput, uint256 reserveOutput, ) = pair.getReserves();
-
-		if (reserveInput == 0 && reserveOutput == 0) {
-			// If there is no liquidity, provide liquidity with same value between AVAX and Flip
-			return avaxAmount;
-		}
-
-		// The reason why this should be .quote and not .getAmountOut from my point of view is because
-		// there should be no slippage when determining how much protocol token to put up against base chain token
-		return JoeLibrary.quote(avaxAmount, reserveInput, reserveOutput);
-	}
-
-	/// Provide liquidity
-	function provideLiquidity(uint256 flipAmount, uint256 avaxAmount)
-        private
-	    returns (
-            uint256 amountFlips,
-            uint256 amountAvax,
-            uint256 liq
-	    )
-    {
-		flipsToken.approve(address(joeRouter), flipAmount);
-		WAVAXToken.approve(address(joeRouter), avaxAmount);
-
-		(uint256 amountFlips, uint256 amountAvax, uint256 liq) = joeRouter.addLiquidity(
-			address(flipsToken), // tokenA address (flips)
-			address(WAVAXToken), // tokenB address (wavax)
-			flipAmount, // flip token <- just use same value as avax amount since the contract can mint unlimited supply
-			avaxAmount, // tokenB amount desired
-			flipAmount, // tokenA amount min (flips)
-			avaxAmount, // tokenB amount min (wavax)
-			// owner, // to
-			address(this),
-			block.timestamp.add(1000)
-		);
-	}
-
-	/// Convert token to WAVAX
-	function convertToWAVAX(uint amount, address token) internal returns (uint256[] memory amounts) {
-        IJoePair pair = getPair(address(flipsToken));
-
-		require(address(pair) != address(0), 'Cannot convert token to WAVAX. It has no existing pair.');
-
-		IERC20(token).approve(address(joeRouter), amount);
-
-		address[] memory path = new address[](2);
-		path[0] = token;
-		path[1] = address(WAVAXToken);
-
-        console.log('swapExactTokensForTokens');
-        console.log('joeRouter address', address(joeRouter));
-        console.log('pair get the pair', address(pair));
-
-        // console.log('paircodehash calculated in flippening contract', joeFactory.pairCodeHash());
-
-		return joeRouter.swapExactTokensForTokens(
-			amount,
-			0,
-			path,
-			address(this),
-			block.timestamp.add(1000)
-		);
 	}
 }
