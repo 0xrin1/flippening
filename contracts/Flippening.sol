@@ -330,7 +330,7 @@ contract Flippening {
 	}
 
 	/// Determine amount that should be paid to protocol and use it to provide liquidity.
-	function processFees(uint index) public payable returns (uint256) {
+	function processFees(uint index) internal returns (uint256) {
 		Flip memory flip = flips[index];
 
 		// Get amount of flips that should be minted this iteration
@@ -474,7 +474,7 @@ contract Flippening {
 	}
 
 	/// Convert token to WAVAX
-	function convertToWAVAX(uint amount, address token) public returns (uint256[] memory amounts) {
+	function convertToWAVAX(uint amount, address token) internal returns (uint256[] memory amounts) {
         IJoePair pair = getPair(address(flipsToken));
 
 		require(address(pair) != address(0), 'Cannot convert token to WAVAX. It has no existing pair.');

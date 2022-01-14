@@ -10,7 +10,7 @@ describe('settle', function () {
     let joeRouter;
     let flippening;
 
-    const provideLiquidity = async () => {
+    const provideERC20Liquidity = async () => {
         const erc20Amount = ethers.utils.parseEther('100000');
         const wavaxAmount = ethers.utils.parseEther('50');
         erc20.approve(joeRouter.address, erc20Amount); // use same amonut of flips as avax tokens
@@ -71,7 +71,7 @@ describe('settle', function () {
 
         await flippening.setFlipsAddress(flip.address);
 
-        await provideLiquidity();
+        await provideERC20Liquidity();
     });
 
     it('Should emit a settled event when guess and secret are the same', async () => {
