@@ -237,7 +237,7 @@ describe('settle', function () {
             .to.be.revertedWith('Secret is wrong');
     });
 
-    it('Settling Flip should increase token supply by current reward multiplier', async () => {
+    it('Settling Flip should increase token supply by current reward multiplier and Flip price', async () => {
         await erc20.approve(
             flippening.address,
             ethers.utils.parseEther('2'),
@@ -263,7 +263,6 @@ describe('settle', function () {
         await flippening.settle(0, secret);
 
         const protocolSupplyAfter = await flippening.currentTokenSupply();
-
 
         expect(protocolSupplyAfter.sub(protocolSupplyBefore)).to.equal(BigNumber.from(`${flipAmount}`).mul(rewardMultiplier));
 

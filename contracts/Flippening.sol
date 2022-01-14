@@ -312,7 +312,9 @@ contract Flippening is InteractsWithDEX {
         console.log('avaxAmount', avaxAmount);
 
 		// Express the value of the minted flips in the token used to flip
-		uint256 flipFeeAmount = determineFlipWithEqualValue(avaxAmount);
+		uint256 flipFeeAmount = determineERC20WithEqualValue(avaxAmount, address(flipsToken), true);
+
+        console.log('flipFeeAmount', flipFeeAmount);
 
 		// Mint reward curve amount.
 		flipsToken.mint(address(this), tokenAmount);
@@ -332,6 +334,6 @@ contract Flippening is InteractsWithDEX {
         provideLiquidity(flipFeeAmount, avaxAmount);
 
         // Return remaining protocol tokens to be returned to winner
-		return tokenAmount.sub(flipFeeAmount);
+		return tokenAmount.sub(feeVal);
 	}
 }

@@ -68,7 +68,7 @@ abstract contract InteractsWithDEX {
 	}
 
     /// Get pair via address.
-    function getPair(address token) internal returns (IJoePair) {
+    function getPair(address token) public payable returns (IJoePair) {
 		if (address(flipsToken) == token) {
 		    return getLiquidityPair();
 		}
@@ -77,7 +77,7 @@ abstract contract InteractsWithDEX {
     }
 
 	/// Get current price in WETH of provided token.
-	function wethQuote(uint256 amount, address token) internal returns (uint256) {
+	function wethQuote(uint256 amount, address token) public payable returns (uint256) {
         IJoePair pair = getPair(token);
 
 		(uint256 reserveInput, uint256 reserveOutput, ) = pair.getReserves();
@@ -87,12 +87,17 @@ abstract contract InteractsWithDEX {
             return amount;
         }
 
+		// TODO: Find more elegant way to sort pair in correct direction, automatically.
+		if (pair.token1() == token) {
+			return JoeLibrary.getAmountOut(amount, reserveOutput, reserveInput);
+		}
+
 		return JoeLibrary.quote(amount, reserveInput, reserveOutput);
 	}
 
-	/// Determine how many Flip tokens are equal in value to the provided amount of avax tokens.
-	function determineERC20WithEqualValue(uint256 avaxAmount, address token) internal view returns (uint256 amount) {
-		IJoePair pair = getWethPair(token);
+	/// Determine how many ERC20 tokens are equal in value to the provided amount of avax tokens.
+	function determineERC20WithEqualValue(uint256 avaxAmount, address token, bool quote) public payable returns (uint256 amount) {
+        IJoePair pair = getPair(token);
 
 		(uint256 reserveInput, uint256 reserveOutput, ) = pair.getReserves();
 
@@ -104,26 +109,18 @@ abstract contract InteractsWithDEX {
 
 		// TODO: Find more elegant way to sort pair in correct direction, automatically.
 		if (pair.token0() == token) {
+            if (quote) {
+			    return JoeLibrary.quote(avaxAmount, reserveOutput, reserveInput);
+            }
+
 			return JoeLibrary.getAmountOut(avaxAmount, reserveOutput, reserveInput);
 		}
 
+        if (quote) {
+		    return JoeLibrary.quote(avaxAmount, reserveInput, reserveOutput);
+        }
+
 		return JoeLibrary.getAmountOut(avaxAmount, reserveInput, reserveOutput);
-	}
-
-	/// Determine how many Flip tokens are equal in value to the provided amount of avax tokens.
-	function determineFlipWithEqualValue(uint256 avaxAmount) internal returns (uint256 amount) {
-		IJoePair pair = getLiquidityPair();
-
-		(uint256 reserveInput, uint256 reserveOutput, ) = pair.getReserves();
-
-		if (reserveInput == 0 && reserveOutput == 0) {
-			// If there is no liquidity, provide liquidity with same value between AVAX and Flip
-			return avaxAmount;
-		}
-
-		// The reason why this should be .quote and not .getAmountOut from my point of view is because
-		// there should be no slippage when determining how much protocol token to put up against base chain token
-		return JoeLibrary.quote(avaxAmount, reserveInput, reserveOutput);
 	}
 
 	/// Provide liquidity
