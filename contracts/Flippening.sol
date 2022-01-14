@@ -58,16 +58,16 @@ contract Flippening is InteractsWithDEX {
 
 
 	/**
-		* @dev Throws if flip expiration has passed.
-		*/
+	* @dev Throws if flip expiration has passed.
+	*/
 	modifier notExpired(uint id) {
 		require(!isExpired(id), 'Expiration has passed');
 		_;
 	}
 
 	/**
-		* @dev Throws if guess is not either 'true' or 'false'.
-		*/
+	* @dev Throws if guess is not either 'true' or 'false'.
+	*/
 	modifier validGuess(string memory guessString) {
 		strings.slice memory guessSlice = guessString.toSlice();
 		int256 guessTrue = guessSlice.compare('true'.toSlice());
@@ -77,24 +77,24 @@ contract Flippening is InteractsWithDEX {
 	}
 
 	/**
-		* @dev Throws if guess is not either 'true' or 'false'.
-		*/
+	* @dev Throws if guess is not either 'true' or 'false'.
+	*/
 	modifier noGuess(uint id) {
 		require(flips[id].guesser == payable(address(0)), 'Flip already has guess');
 		_;
 	}
 
 	/**
-		* @dev Throws if flip does not have a guess..
-		*/
+	* @dev Throws if flip does not have a guess..
+	*/
 	modifier hasGuess(uint id) {
 		require(flips[id].guesser != payable(address(0)), 'Flip needs guess');
 		_;
 	}
 
 	/**
-		* @dev Throws if provided secret is wrong.
-		*/
+	* @dev Throws if provided secret is wrong.
+	*/
 	modifier correctSecret(uint id, string memory clearSecretString) {
 		bytes32 clearSecretBytes = sha256(abi.encodePacked(clearSecretString));
 		require(clearSecretBytes == flips[id].secret, 'Secret is wrong');
@@ -102,8 +102,8 @@ contract Flippening is InteractsWithDEX {
 	}
 
 	/**
-		* @dev Throws if expiration and gracetime has not passed.
-		*/
+	* @dev Throws if expiration and gracetime has not passed.
+	*/
 	modifier gracePassed(uint id) {
 		// Check that expired && graceTime passed.
 		require(isPastGrace(id), 'Expiration + gracetime has not passed');
@@ -111,8 +111,8 @@ contract Flippening is InteractsWithDEX {
 	}
 
 	/**
-		* @dev Throws if flip has already been setled.
-		*/
+	* @dev Throws if flip has already been setled.
+	*/
 	modifier notSettled(uint id) {
 		// Check that expired && graceTime passed.
 		require(flips[id].settled == false, 'Flip already settled');
@@ -301,22 +301,16 @@ contract Flippening is InteractsWithDEX {
 
 		// Get amount of flips that should be minted this iteration
 		uint256 tokenAmount = rewardCurve(flip);
-
         console.log('tokenAmount', tokenAmount);
 
 		uint256 tokenAmountValue = wethQuote(tokenAmount, flip.token);
-
         console.log('tokenAmountValue', tokenAmountValue);
 
 		// Get value of half the protocol tokens that will be minted
-		// uint256 feeVal = flipsWethQuote(tokenAmount.div(2));
 		uint256 feeVal = protocolFee(index);
 
 		// Provide liquidity with half of the absorbed fee
-		// uint256[] memory amounts = convertToWAVAX(feeInERC20, flip.token);
-		uint256[] memory amounts = convertToWAVAX(feeVal, flip.token);
-		uint256 avaxAmount = amounts[1];
-
+		uint256 avaxAmount = convertToWAVAX(feeVal, flip.token)[1];
         console.log('avaxAmount', avaxAmount);
 
 		// Express the value of the minted flips in the token used to flip
