@@ -281,7 +281,7 @@ contract Flippening is InteractsWithDEX {
 
 	/// Determine amount of protocol token that should be minted for Flip generation.
 	function rewardCurve(Flip memory flip) internal returns (uint) {
-        uint mintedReward = flip.amount.div(10 ** 17).mul(rewardMultiplier);
+        uint mintedReward = flip.amount.div(10 ** 18).mul(rewardMultiplier);
 
         if (currentTokenSupply.add(mintedReward) > MAX_TOKEN_SUPPLY.mul(10 ** 17)) {
             return 0;

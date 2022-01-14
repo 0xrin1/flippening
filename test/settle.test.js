@@ -1,11 +1,13 @@
 const { expect } = require('chai');
 const { sha256, randomSecretWord } = require('./base/helpers');
-const { smockit } = require("@eth-optimism/smock");
+const { BigNumber } = require('ethers');
+const { smockit } = require('@eth-optimism/smock');
 
 describe('settle', function () {
     let owner;
     let erc20;
     let wavax;
+    let flip;
     let joeFactory;
     let joeRouter;
     let flippening;
@@ -233,5 +235,38 @@ describe('settle', function () {
 
         await expect(flippening.settle(0, wrongSecret))
             .to.be.revertedWith('Secret is wrong');
+    });
+
+    it('Settling Flip should increase token supply by current reward multiplier', async () => {
+        await erc20.approve(
+            flippening.address,
+            ethers.utils.parseEther('2'),
+        );
+
+        const salt = randomSecretWord();
+
+        const secret = `${salt} true`;
+
+        const flipAmount = 1;
+
+        await flippening.create(
+            await sha256(secret),
+            erc20.address,
+            ethers.utils.parseEther(`${flipAmount}`),
+        );
+
+        await flippening.guess(0, 'true');
+
+        const rewardMultiplier = await flippening.rewardMultiplier();
+        const protocolSupplyBefore = await flippening.currentTokenSupply();
+
+        await flippening.settle(0, secret);
+
+        const protocolSupplyAfter = await flippening.currentTokenSupply();
+
+
+        expect(protocolSupplyAfter.sub(protocolSupplyBefore)).to.equal(BigNumber.from(`${flipAmount}`).mul(rewardMultiplier));
+
+        expect(await flip.totalSupply()).to.equal(BigNumber.from(`${flipAmount}`).mul(rewardMultiplier));
     });
 });
