@@ -248,29 +248,29 @@ contract Flippening is InteractsWithDEX {
 	}
 
 	/// Calculate reward amount for guesser.
-	function protocolFee(uint id) internal returns (uint) {
+	function protocolFee(uint id) internal view returns (uint) {
 		return flips[id].amount.mul(2).div(100).mul(2); // 2% of twice the flip amount
 	}
 
 	/// Calculate amount collected by winner.
-	function winAmount(uint id) internal returns (uint) {
+	function winAmount(uint id) internal view returns (uint) {
 		uint rewardAmount = protocolFee(id);
 
 		return flips[id].amount.mul(2).sub(rewardAmount);
 	}
 
 	/// Is given flip expired?
-	function isExpired(uint id) internal returns (bool) {
+	function isExpired(uint id) internal view returns (bool) {
 		return flips[id].createdAt.add(flips[id].expiry.mul(60)) <= block.timestamp;
 	}
 
 	/// Is given flip past the grace period?
-	function isPastGrace(uint id) internal returns (bool) {
+	function isPastGrace(uint id) internal view returns (bool) {
 		return flips[id].createdAt.add(flips[id].expiry.mul(60)).add(graceTime.mul(60)) < block.timestamp;
 	}
 
 	/// Is given flip within the grace period?
-	function isInGrace(uint id) internal returns (bool) {
+	function isInGrace(uint id) internal view returns (bool) {
 		return isExpired(id) && !isPastGrace(id);
 	}
 
@@ -330,14 +330,14 @@ contract Flippening is InteractsWithDEX {
             // Provide liquidity with flipAmount equal to the number of tokens minted vs its value in WETH.
             // This means that some WETH is left on the table.
             // Situation occurs when flip amount is very large and leaves the flipper no FLIP rewards.
-		    (uint amountFlips, uint amountAvax, uint liq) = provideLiquidity(tokenAmount, tokenAmountValue);
+		    provideLiquidity(tokenAmount, tokenAmountValue);
 
             return 0;
         }
 
         // Occurs when the fee, when expressed in number of flips, is smaller or equal to the number of flips minted according to the reward.
         // Provide liquidity equal to the entire fee collected this round.
-        (uint amountFlips, uint amountAvax, uint liq) = provideLiquidity(flipFeeAmount, avaxAmount);
+        provideLiquidity(flipFeeAmount, avaxAmount);
 
         // Return remaining protocol tokens to be returned to winner
 		return tokenAmount.sub(flipFeeAmount);

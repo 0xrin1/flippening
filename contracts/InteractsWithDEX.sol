@@ -62,7 +62,7 @@ abstract contract InteractsWithDEX {
 	}
 
 	/// Get WETH pair of provided token.
-	function getWethPair(address token) internal returns (IJoePair) {
+	function getWethPair(address token) internal view returns (IJoePair) {
 		(address tokenA, address tokenB) = JoeLibrary.sortTokens(token, address(WAVAXToken));
 		return IJoePair(joeFactory.getPair(tokenA, tokenB));
 	}
@@ -91,7 +91,7 @@ abstract contract InteractsWithDEX {
 	}
 
 	/// Determine how many Flip tokens are equal in value to the provided amount of avax tokens.
-	function determineERC20WithEqualValue(uint256 avaxAmount, address token) internal returns (uint256 amount) {
+	function determineERC20WithEqualValue(uint256 avaxAmount, address token) internal view returns (uint256 amount) {
 		IJoePair pair = getWethPair(token);
 
 		(uint256 reserveInput, uint256 reserveOutput, ) = pair.getReserves();
@@ -138,7 +138,7 @@ abstract contract InteractsWithDEX {
         flipsToken.approve(address(joeRouter), flipAmount);
         WAVAXToken.approve(address(joeRouter), avaxAmount);
 
-		(uint256 amountFlips, uint256 amountAvax, uint256 liq) = joeRouter.addLiquidity(
+		return joeRouter.addLiquidity(
 			address(flipsToken), // tokenA address (flips)
 			address(WAVAXToken), // tokenB address (wavax)
 			flipAmount, // flip token <- just use same value as avax amount since the contract can mint unlimited supply
