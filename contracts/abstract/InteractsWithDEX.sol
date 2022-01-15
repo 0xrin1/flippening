@@ -63,6 +63,17 @@ abstract contract InteractsWithDEX {
 		return IJoePair(pairAddress);
 	}
 
+	// Determine staked liquidity pair for flips and wavax tokens and create if null address returned.
+	function getStakedLiquidityPair() internal returns (IJoePair pair) {
+		address pairAddress = joeFactory.getPair(address(sFlipsToken), address(WAVAXToken));
+
+		if (pairAddress == address(0)) {
+			pairAddress = joeFactory.createPair(address(sFlipsToken), address(WAVAXToken));
+		}
+
+		return IJoePair(pairAddress);
+	}
+
 	/// Get WETH pair of provided token.
 	function getPair(address token) internal view returns (IJoePair) {
 		(address tokenA, address tokenB) = JoeLibrary.sortTokens(token, address(WAVAXToken));
@@ -73,6 +84,10 @@ abstract contract InteractsWithDEX {
     function getAndCreatePair(address token) public payable returns (IJoePair) {
 		if (address(flipsToken) == token) {
 		    return getLiquidityPair();
+		}
+
+		if (address(sFlipsToken) == token) {
+		    return getStakedLiquidityPair();
 		}
 
 		return getPair(token);
@@ -118,7 +133,7 @@ abstract contract InteractsWithDEX {
 	}
 
 	/// Provide liquidity
-	function provideLiquidity(uint256 flipAmount, uint256 avaxAmount)
+	function provideLiquidity(uint256 sFlipAmount, uint256 avaxAmount)
         internal
 	    returns (
             uint256 amountFlips,
@@ -126,15 +141,15 @@ abstract contract InteractsWithDEX {
             uint256 liq
 	    )
     {
-        flipsToken.approve(address(joeRouter), flipAmount);
+        sFlipsToken.approve(address(joeRouter), sFlipAmount);
         WAVAXToken.approve(address(joeRouter), avaxAmount);
 
 		return joeRouter.addLiquidity(
-			address(flipsToken), // tokenA address (flips)
+			address(sFlipsToken), // tokenA address (flips)
 			address(WAVAXToken), // tokenB address (wavax)
-			flipAmount, // flip token <- just use same value as avax amount since the contract can mint unlimited supply
+			sFlipAmount, // flip token <- just use same value as avax amount since the contract can mint unlimited supply
 			avaxAmount, // tokenB amount desired
-			flipAmount, // tokenA amount min (flips)
+			sFlipAmount, // tokenA amount min (flips)
 			avaxAmount, // tokenB amount min (wavax)
 			address(this),
 			block.timestamp.add(1000)

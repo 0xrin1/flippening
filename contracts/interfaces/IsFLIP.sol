@@ -3,10 +3,12 @@
 
 pragma solidity ^0.8.0;
 
+import './IERC20.sol';
+
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
  */
-interface IsFLIP {
+interface IsFLIP is IERC20 {
     /*///////////////////////////////////////////////////////////////
                         DEPOSIT/WITHDRAWAL LOGIC
     //////////////////////////////////////////////////////////////*/

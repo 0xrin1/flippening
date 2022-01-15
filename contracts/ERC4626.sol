@@ -3,10 +3,14 @@ pragma solidity >=0.8.0;
 
 import '@rari-capital/solmate/src/tokens/ERC20.sol';
 import '@rari-capital/solmate/src/mixins/ERC4626.sol';
+import '@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol';
 
 import 'hardhat/console.sol';
 
 contract sFLIP is ERC4626 {
+    uint256 flipProvided;
+    uint256 wavaxProvided;
+
     constructor(
         ERC20 _underlying,
         string memory _name,
@@ -17,6 +21,6 @@ contract sFLIP is ERC4626 {
     }
 
     function afterDeposit(uint256 underlyingAmount) internal virtual override {
-        console.log('after deposit');
+        console.log('after deposit', underlyingAmount);
     }
 }

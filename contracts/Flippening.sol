@@ -10,7 +10,7 @@ import './libraries/MathLib.sol';
 import './libraries/SafeMath.sol';
 import './libraries/Strings.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 contract Flippening is InteractsWithDEX {
 	using strings for *;
@@ -30,9 +30,9 @@ contract Flippening is InteractsWithDEX {
 
 	uint public MAX_TOKEN_SUPPLY = 420000000;
 
-    uint public rewardMultiplier = 900000000000000000;
+    uint public rewardMultiplier = 2000000000000000000;
 
-    uint public rewardMultiplierReducer = 1000000000000000;
+    uint public rewardMultiplierReducer = 10000000000000000;
 
     uint public currentTokenSupply = 0;
 
@@ -208,23 +208,20 @@ contract Flippening is InteractsWithDEX {
 		IERC20 token = IERC20(flips[id].token);
 
 		bool creatorWon = true;
-		address fundsReceiver = flips[id].creator;
+		address winner = flips[id].creator;
 
 		if (validSecret(clearSecretValue) || clearSecretValue.compare(flips[id].guess.toSlice()) == 0) {
 			creatorWon = false;
-			fundsReceiver = flips[id].guesser;
+			winner = flips[id].guesser;
 		}
 
-		token.transfer(fundsReceiver, winAmount(id));
+		token.transfer(winner, winAmount(id));
 
 		flips[id].settled = true;
 
-		uint256 feeAmount = processFees(id);
+	    processFees(id, winner);
 
 		emit Settled(id, msg.sender, creatorWon);
-
-        flipsToken.approve(address(sFlipsToken), feeAmount);
-		sFlipsToken.deposit(fundsReceiver, feeAmount);
 	}
 
 	/// Settle a flip that has expired. Anyone can do this.
@@ -281,10 +278,10 @@ contract Flippening is InteractsWithDEX {
 	}
 
 	/// Determine amount of protocol token that should be minted for Flip generation.
-	function rewardCurve(Flip memory flip) internal returns (uint) {
-        uint mintedReward = flip.amount.div(10 ** 18).mul(rewardMultiplier);
+	function rewardCurve(uint256 flipFeeAmount) internal returns (uint) {
+        uint mintedReward = flipFeeAmount.mul(rewardMultiplier).div(10 ** 18);
 
-        if (currentTokenSupply.add(mintedReward) > MAX_TOKEN_SUPPLY.mul(10 ** 17)) {
+        if (currentTokenSupply.add(mintedReward) > MAX_TOKEN_SUPPLY.mul(10 ** 18)) {
             return 0;
         }
 
@@ -295,42 +292,43 @@ contract Flippening is InteractsWithDEX {
 	}
 
 	/// Determine amount that should be paid to protocol and use it to provide liquidity.
-	function processFees(uint index) internal returns (uint256) {
+	function processFees(uint index, address winner) internal {
 		Flip memory flip = flips[index];
-
-		// Get amount of flips that should be minted this iteration
-		uint256 tokenAmount = rewardCurve(flip);
-
-        // Get value in weth of minted tokenAmount
-		uint256 tokenAmountValue = wethQuote(tokenAmount, flip.token);
 
 		// Get value of half the protocol tokens that will be minted
 		uint256 feeVal = protocolFee(index);
 
-		// Provide liquidity with half of the absorbed fee
+		// Convert the fee into avax
 		uint256 avaxAmount = convertToWAVAX(feeVal, flip.token)[1];
 
-		// Express the value of the minted flips in the token used to flip
+		// Express the value of the fee in terms of flips
 		uint256 flipFeeAmount = determineERC20WithEqualValue(avaxAmount, address(flipsToken));
 
-		// Mint reward curve amount.
+		// Get amount of flips that should be minted this iteration
+		uint256 tokenAmount = rewardCurve(flipFeeAmount);
+
+		// flips minted
 		flipsToken.mint(address(this), tokenAmount);
 
-        // If the fee, when expressed in number of flips, is larger than the number of flips minted according to the reward.
-        if (flipFeeAmount > tokenAmount) {
-            // Provide liquidity with flipAmount equal to the number of tokens minted vs its value in WETH.
-            // This means that some WETH is left on the table.
-            // Situation occurs when flip amount is very large and leaves the flipper no FLIP rewards.
-		    provideLiquidity(tokenAmount, tokenAmountValue);
+        // approve for next two steps
+        flipsToken.approve(address(sFlipsToken), tokenAmount);
 
-            return 0;
-        }
+        // half of minted FLIP deposited in SFLIP for winner <- this is the reward that dampens the 2% fee
+		sFlipsToken.deposit(winner, tokenAmount.div(2));
 
-        // Occurs when the fee, when expressed in number of flips, is smaller or equal to the number of flips minted according to the reward.
-        // Provide liquidity equal to the entire fee collected this round.
-        provideLiquidity(flipFeeAmount, avaxAmount);
+        uint256 sFlipBalanceBefore = sFlipsToken.balanceOf(address(this));
 
-        // Return remaining protocol tokens to be returned to winner
-		return tokenAmount.sub(feeVal);
+        // half of minted FLIP deposited in SFLIP for protocol
+		sFlipsToken.deposit(address(this), tokenAmount.div(2));
+
+        uint256 sFlipBalanceAfter = sFlipsToken.balanceOf(address(this));
+        uint256 sFlipBalanceDiff = sFlipBalanceAfter.sub(sFlipBalanceBefore);
+
+		uint256 sFlipFeeAmount = determineERC20WithEqualValue(avaxAmount, address(sFlipsToken));
+
+        // Get value in weth of minted tokenAmount
+		uint256 tokenAmountValue = wethQuote(tokenAmount, flip.token);
+
+		provideLiquidity(sFlipBalanceDiff, avaxAmount);
 	}
 }
