@@ -278,7 +278,8 @@ contract Flippening is InteractsWithDEX {
 	}
 
 	/// Determine amount of protocol token that should be minted for Flip generation.
-	function rewardCurve(uint256 flipFeeAmount) internal returns (uint) {
+    /// uint256 flipFeeAmount 2% fee expressed in terms of FLIP
+	function rewardCurve(uint256 flipFeeAmount) internal returns (uint256) {
         uint mintedReward = flipFeeAmount.mul(rewardMultiplier).div(10 ** 18);
 
         if (currentTokenSupply.add(mintedReward) > MAX_TOKEN_SUPPLY.mul(10 ** 18)) {
@@ -286,7 +287,10 @@ contract Flippening is InteractsWithDEX {
         }
 
         currentTokenSupply = currentTokenSupply.add(mintedReward);
-        rewardMultiplier = rewardMultiplier.sub(rewardMultiplierReducer);
+
+        if (rewardMultiplier >= rewardMultiplierReducer) {
+            rewardMultiplier = rewardMultiplier.sub(rewardMultiplierReducer);
+        }
 
         return mintedReward;
 	}
@@ -316,21 +320,21 @@ contract Flippening is InteractsWithDEX {
         // half of minted FLIP deposited in SFLIP for winner <- this is the reward that dampens the 2% fee
 		sFlipsToken.deposit(winner, tokenAmount.div(2));
 
-        uint256 sFlipBalanceBefore = sFlipsToken.balanceOf(address(this));
-
         // half of minted FLIP deposited in SFLIP for protocol
-		sFlipsToken.deposit(address(this), tokenAmount.div(2));
+		uint256 depositedsFlipTokens = sFlipsToken.deposit(address(this), tokenAmount.div(2));
 
-        uint256 sFlipBalanceAfter = sFlipsToken.balanceOf(address(this));
-        uint256 sFlipBalanceDiff = sFlipBalanceAfter.sub(sFlipBalanceBefore);
+        console.log('depositedsFlipTokens', depositedsFlipTokens);
 
-        uint256 sFlipBalanceDiffValue = wethQuote(sFlipBalanceDiff, address(sFlipsToken));
+        uint256 depositedsFlipTokensValue = wethQuote(depositedsFlipTokens, address(sFlipsToken));
 
+        console.log('flipFeeAmount', flipFeeAmount);
         console.log('tokenAmount', tokenAmount);
-        console.log('sFlipBalanceDiff', sFlipBalanceDiff);
         console.log('avaxAmount', avaxAmount);
-        console.log('sFlipBalanceDiffValue', sFlipBalanceDiffValue);
+        console.log('depositedsFlipTokens', depositedsFlipTokens);
+        console.log('depositedsFlipsTokensValue', depositedsFlipTokensValue);
+        console.log('avaxAmount - depositedsFlipsTokenValue', avaxAmount.sub(depositedsFlipTokensValue));
 
-		provideLiquidity(sFlipBalanceDiff, sFlipBalanceDiffValue);
+        // The remaining avax will be distributed to FLIP holders.
+		provideLiquidity(depositedsFlipTokens, depositedsFlipTokensValue);
 	}
 }
