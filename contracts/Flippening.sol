@@ -324,11 +324,13 @@ contract Flippening is InteractsWithDEX {
         uint256 sFlipBalanceAfter = sFlipsToken.balanceOf(address(this));
         uint256 sFlipBalanceDiff = sFlipBalanceAfter.sub(sFlipBalanceBefore);
 
-		uint256 sFlipFeeAmount = determineERC20WithEqualValue(avaxAmount, address(sFlipsToken));
+        uint256 sFlipBalanceDiffValue = wethQuote(sFlipBalanceDiff, address(sFlipsToken));
 
-        // Get value in weth of minted tokenAmount
-		uint256 tokenAmountValue = wethQuote(tokenAmount, flip.token);
+        console.log('tokenAmount', tokenAmount);
+        console.log('sFlipBalanceDiff', sFlipBalanceDiff);
+        console.log('avaxAmount', avaxAmount);
+        console.log('sFlipBalanceDiffValue', sFlipBalanceDiffValue);
 
-		provideLiquidity(sFlipBalanceDiff, avaxAmount);
+		provideLiquidity(sFlipBalanceDiff, sFlipBalanceDiffValue);
 	}
 }

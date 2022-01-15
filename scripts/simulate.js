@@ -4,6 +4,7 @@ const { ethers, Contract, BigNumber, utils } = require('ethers');
 const flippeningABI = require('../artifacts/contracts/Flippening.sol/Flippening.json');
 const ERC20ABI = require('../artifacts/contracts/ERC20.sol/ERC20Basic.json');
 const FlipABI = require('../artifacts/contracts/ERC20.sol/FLIP.json');
+const sFlipABI = require('../artifacts/contracts/ERC4626.sol/sFLIP.json');
 const WavaxABI = require('../artifacts/contracts/ERC20.sol/WAVAX.json');
 const JoeRouterABI = require('../artifacts/@traderjoe-xyz/core/contracts/traderjoe/JoeRouter02.sol/JoeRouter02.json');
 const JoeFactoryABI = require('../artifacts/@traderjoe-xyz/core/contracts/traderjoe/JoeFactory.sol/JoeFactory.json');
@@ -22,6 +23,7 @@ let flippening;
 let erc20;
 let wavax;
 let flip;
+let sFlip;
 let joeRouter;
 let joeFactory;
 
@@ -40,6 +42,9 @@ let joeFactory;
 
     let flipUnsigned = new Contract(addresses.tokens.FLIP.local, FlipABI.abi, provider);
     flip = flipUnsigned.connect(signer);
+
+    let sFlipUnsigned = new Contract(addresses.tokens.sFLIP.local, sFlipABI.abi, provider);
+    sFlip = sFlipUnsigned.connect(signer);
 
     let joeRouterUnsigned = new Contract(addresses.joeRouter.local, JoeRouterABI.abi, provider);
     joeRouter = joeRouterUnsigned.connect(signer);
@@ -69,6 +74,13 @@ let joeFactory;
         flipWavaxPair = await getWavaxPair(flip.address);
     }
     console.log('flipWavaxPair', flipWavaxPair);
+
+    let sFlipWavaxPair = await getWavaxPair(sFlip.address);
+    if (parseInt(sFlipWavaxPair) === 0) {
+        await createWavaxPair(sFlip.address);
+        flipWavaxPair = await getWavaxPair(sFlip.address);
+    }
+    console.log('sFlipWavaxPair', sFlipWavaxPair);
 
     for (const i in [...Array(4000)]) {
         await erc20.approve(flippening.address, utils.parseEther('2'));
