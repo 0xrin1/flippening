@@ -302,6 +302,10 @@ contract Flippening is InteractsWithDEX {
 		// Get value of half the protocol tokens that will be minted
 		uint256 feeVal = protocolFee(index);
 
+        if (feeVal == 0) {
+            return;
+        }
+
 		// Convert the fee into avax
 		uint256 avaxAmount = convertToWAVAX(feeVal, flip.token)[1];
 
