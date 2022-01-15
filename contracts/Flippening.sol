@@ -301,19 +301,23 @@ contract Flippening is InteractsWithDEX {
 
 		// Get value of half the protocol tokens that will be minted
 		uint256 feeVal = protocolFee(index);
-
-        if (feeVal == 0) {
-            return;
-        }
+        console.log('feeVal', feeVal);
 
 		// Convert the fee into avax
 		uint256 avaxAmount = convertToWAVAX(feeVal, flip.token)[1];
+        console.log('avaxAmount', avaxAmount);
 
 		// Express the value of the fee in terms of flips
 		uint256 flipFeeAmount = determineERC20WithEqualValue(avaxAmount, address(flipsToken));
+        console.log('flipFeeAmount', flipFeeAmount);
 
 		// Get amount of flips that should be minted this iteration
 		uint256 tokenAmount = rewardCurve(flipFeeAmount);
+        console.log('tokenAmount', tokenAmount);
+
+        if (tokenAmount == 0) {
+            return;
+        }
 
 		// flips minted
 		flipsToken.mint(address(this), tokenAmount);
@@ -326,16 +330,11 @@ contract Flippening is InteractsWithDEX {
 
         // half of minted FLIP deposited in SFLIP for protocol
 		uint256 depositedsFlipTokens = sFlipsToken.deposit(address(this), tokenAmount.div(2));
-
         console.log('depositedsFlipTokens', depositedsFlipTokens);
 
         uint256 depositedsFlipTokensValue = wethQuote(depositedsFlipTokens, address(sFlipsToken));
-
-        console.log('flipFeeAmount', flipFeeAmount);
-        console.log('tokenAmount', tokenAmount);
-        console.log('avaxAmount', avaxAmount);
-        console.log('depositedsFlipTokens', depositedsFlipTokens);
         console.log('depositedsFlipsTokensValue', depositedsFlipTokensValue);
+
         console.log('avaxAmount - depositedsFlipsTokenValue', avaxAmount.sub(depositedsFlipTokensValue));
 
         // The remaining avax will be distributed to FLIP holders.
