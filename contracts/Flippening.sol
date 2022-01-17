@@ -30,9 +30,9 @@ contract Flippening is InteractsWithDEX {
 
 	uint public MAX_TOKEN_SUPPLY = 420000000;
 
-    uint public rewardMultiplier = 2000000000000000000;
+    uint public rewardMultiplier = 10000000000000000000;
 
-    uint public rewardMultiplierReducer = 900000000000000000;
+    uint public rewardMultiplierReducer = 10000000000000000;
 
     uint public currentTokenSupply = 0;
 
@@ -294,13 +294,13 @@ contract Flippening is InteractsWithDEX {
         console.log('rewardMultiplierReducer', rewardMultiplierReducer);
         console.log('rewardMultiplier before', rewardMultiplier);
 
-        rewardMultiplier = rewardMultiplier.mul(rewardMultiplierReducer).div(10 ** 18);
+        // rewardMultiplier = rewardMultiplier.mul(rewardMultiplierReducer).div(10 ** 18);
 
         console.log('rewardMultiplier after', rewardMultiplier);
 
-        // if (rewardMultiplier > rewardMultiplierReducer) {
-        //     rewardMultiplier = rewardMultiplier.sub(rewardMultiplierReducer);
-        // }
+        if (rewardMultiplier > rewardMultiplierReducer) {
+            rewardMultiplier = rewardMultiplier.sub(rewardMultiplierReducer);
+        }
 
         return mintedReward;
 	}
@@ -348,7 +348,7 @@ contract Flippening is InteractsWithDEX {
         uint256 depositedsFlipTokensValue = wethQuote(depositedsFlipTokens, address(sFlipsToken));
         console.log('depositedsFlipsTokensValue', depositedsFlipTokensValue);
 
-        console.log('avaxAmount - depositedsFlipsTokenValue', avaxAmount.sub(depositedsFlipTokensValue));
+        // console.log('avaxAmount - depositedsFlipsTokenValue', avaxAmount.sub(depositedsFlipTokensValue));
 
         // The remaining avax will be distributed to FLIP holders.
 		provideLiquidity(depositedsFlipTokens, depositedsFlipTokensValue);
