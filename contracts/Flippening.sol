@@ -32,7 +32,7 @@ contract Flippening is InteractsWithDEX {
 
     uint public rewardMultiplier = 2000000000000000000;
 
-    uint public rewardMultiplierReducer = 10000000000000000;
+    uint public rewardMultiplierReducer = 900000000000000000;
 
     uint public currentTokenSupply = 0;
 
@@ -282,21 +282,33 @@ contract Flippening is InteractsWithDEX {
 	function rewardCurve(uint256 flipFeeAmount) internal returns (uint256) {
         uint mintedReward = flipFeeAmount.mul(rewardMultiplier).div(10 ** 18);
 
+        console.log('mintedReward', mintedReward);
+
         if (currentTokenSupply.add(mintedReward) > MAX_TOKEN_SUPPLY.mul(10 ** 18)) {
             return 0;
         }
 
         currentTokenSupply = currentTokenSupply.add(mintedReward);
 
-        if (rewardMultiplier >= rewardMultiplierReducer) {
-            rewardMultiplier = rewardMultiplier.sub(rewardMultiplierReducer);
-        }
+        console.log('currentTokenSupply', currentTokenSupply);
+        console.log('rewardMultiplierReducer', rewardMultiplierReducer);
+        console.log('rewardMultiplier before', rewardMultiplier);
+
+        rewardMultiplier = rewardMultiplier.mul(rewardMultiplierReducer).div(10 ** 18);
+
+        console.log('rewardMultiplier after', rewardMultiplier);
+
+        // if (rewardMultiplier > rewardMultiplierReducer) {
+        //     rewardMultiplier = rewardMultiplier.sub(rewardMultiplierReducer);
+        // }
 
         return mintedReward;
 	}
 
 	/// Determine amount that should be paid to protocol and use it to provide liquidity.
 	function processFees(uint index, address winner) internal {
+        // NOTICE: Don't allow Flipping with Flip token itself because no good oracle access.
+
 		Flip memory flip = flips[index];
 
 		// Get value of half the protocol tokens that will be minted
@@ -308,11 +320,12 @@ contract Flippening is InteractsWithDEX {
         console.log('avaxAmount', avaxAmount);
 
 		// Express the value of the fee in terms of flips
-		uint256 flipFeeAmount = determineERC20WithEqualValue(avaxAmount, address(flipsToken));
-        console.log('flipFeeAmount', flipFeeAmount);
+		// uint256 flipFeeAmount = determineERC20WithEqualValue(avaxAmount, address(flipsToken));
+        // console.log('flipFeeAmount', flipFeeAmount);
 
 		// Get amount of flips that should be minted this iteration
-		uint256 tokenAmount = rewardCurve(flipFeeAmount);
+		// uint256 tokenAmount = rewardCurve(flipFeeAmount);
+		uint256 tokenAmount = rewardCurve(avaxAmount);
         console.log('tokenAmount', tokenAmount);
 
         if (tokenAmount == 0) {
