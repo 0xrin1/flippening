@@ -32,7 +32,7 @@ contract Flippening is InteractsWithDEX {
 
     uint public rewardMultiplier = 10000000000000000000;
 
-    uint public rewardMultiplierReducer = 10000000000000000;
+    uint public rewardMultiplierReducer = 5000000000000000;
 
     uint public currentTokenSupply = 0;
 
@@ -40,7 +40,9 @@ contract Flippening is InteractsWithDEX {
 
 	uint private graceTime;
 
-	Flip[] public flips;
+    uint public index = 0;
+
+	mapping (uint256 => Flip) public flips;
 
 
 	event Created(
@@ -136,7 +138,7 @@ contract Flippening is InteractsWithDEX {
 		address tokenAddress,
 		uint amount
 	) public payable {
-		flips.push(Flip({
+		flips[index] = Flip({
 			creator: payable(msg.sender),
 			guesser: payable(address(0)),
 			token: tokenAddress,
@@ -146,13 +148,15 @@ contract Flippening is InteractsWithDEX {
 			createdAt: block.timestamp,
 			expiry: defaultExpiry,
 			settled: false
-		}));
+		});
 
 		IERC20 token = IERC20(tokenAddress);
 
 		token.transferFrom(msg.sender, address(this), amount);
 
-		emit Created(flips.length - 1, msg.sender, tokenAddress, amount);
+		emit Created(index, msg.sender, tokenAddress, amount);
+
+        index += 1;
 	}
 
 	/// Provide a guess against a flip. Should be either true or false.
