@@ -30,9 +30,11 @@ contract Flippening is InteractsWithDEX {
 
 	uint public MAX_TOKEN_SUPPLY = 420000000;
 
-    uint public rewardMultiplier = 10000000000000000000;
+    // 1e19
+    uint public rewardMultiplier = 50000000000000000000;
 
-    uint public rewardMultiplierReducer = 5000000000000000;
+    // 1e16
+    uint public rewardMultiplierReducer = 10000000000000000;
 
     uint public currentTokenSupply = 0;
 

@@ -29,8 +29,8 @@ abstract contract InteractsWithDEX {
 	address private owner;
 
 	/**
-		* @dev Throws if called by any account other than the owner.
-		*/
+	 * @dev Throws if called by any account other than the owner.
+	 */
 	modifier onlyOwner() {
 		require(owner == msg.sender, 'Ownable: caller is not the owner');
 		_;
@@ -47,6 +47,7 @@ abstract contract InteractsWithDEX {
 		joeFactory = IJoeFactory(joeRouter.factory());
 	}
 
+	// Set the address of the FLIP token and sFLIP vault.
 	function setFlipsAddress(address _flipsAddress, address _sFlipsAddress) public onlyOwner {
 		flipsToken = IFLIP(_flipsAddress);
 		sFlipsToken = IsFLIP(_sFlipsAddress);
