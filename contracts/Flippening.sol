@@ -9,6 +9,7 @@ import './interfaces/IFLIP.sol';
 import './libraries/MathLib.sol';
 import './libraries/SafeMath.sol';
 import './libraries/Strings.sol';
+import {SafeERC20} from '.libraries/SafeERC20.sol';
 
 import 'hardhat/console.sol';
 
@@ -154,7 +155,7 @@ contract Flippening is InteractsWithDEX {
 
 		IERC20 token = IERC20(tokenAddress);
 
-		token.transferFrom(msg.sender, address(this), amount);
+		token.safeTransferFrom(msg.sender, address(this), amount);
 
 		emit Created(index, msg.sender, tokenAddress, amount);
 
@@ -171,7 +172,7 @@ contract Flippening is InteractsWithDEX {
 
 		IERC20 token = IERC20(flips[id].token);
 
-		token.transferFrom(msg.sender, address(this), flips[id].amount);
+		token.safeTransferFrom(msg.sender, address(this), flips[id].amount);
 
 		emit Guess(id, msg.sender, guessString, guessString);
 	}
