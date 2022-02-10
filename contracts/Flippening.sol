@@ -183,7 +183,7 @@ contract Flippening is InteractsWithDEX {
 		strings.slice memory delim = ' '.toSlice();
 		string[] memory parts = new string[](strings.count(s, delim) + 1);
 		uint256 partsLen = parts.length;
-		for (uint i = 0; i < partsLen; i++) {
+		for (uint i; i < partsLen; i++) {
 			parts[i] = strings.toString(strings.split(s, delim));
 		}
 
@@ -236,7 +236,7 @@ contract Flippening is InteractsWithDEX {
 	function expire(uint id) public payable gracePassed(id) notSettled(id) {
 		IERC20 token = IERC20(flips[id].token);
 
-		bool creatorWon = false;
+		bool creatorWon;
 		address fundsReceiver = flips[id].guesser;
 		uint256 len = (bytes(flips[id].guess).length
 
