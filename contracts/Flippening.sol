@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity >=0.8.0;
+pragma solidity 0.8.10;
 
 import './abstract/InteractsWithDEX.sol';
 import './ERC20.sol';
@@ -9,6 +9,7 @@ import './interfaces/IFLIP.sol';
 import './libraries/MathLib.sol';
 import './libraries/SafeMath.sol';
 import './libraries/Strings.sol';
+import {SafeERC20} from '.libraries/SafeERC20.sol';
 
 import 'hardhat/console.sol';
 
@@ -154,7 +155,7 @@ contract Flippening is InteractsWithDEX {
 
 		IERC20 token = IERC20(tokenAddress);
 
-		token.transferFrom(msg.sender, address(this), amount);
+		token.safeTransferFrom(msg.sender, address(this), amount);
 
 		emit Created(index, msg.sender, tokenAddress, amount);
 
@@ -171,7 +172,7 @@ contract Flippening is InteractsWithDEX {
 
 		IERC20 token = IERC20(flips[id].token);
 
-		token.transferFrom(msg.sender, address(this), flips[id].amount);
+		token.safeTransferFrom(msg.sender, address(this), flips[id].amount);
 
 		emit Guess(id, msg.sender, guessString, guessString);
 	}
@@ -181,11 +182,12 @@ contract Flippening is InteractsWithDEX {
 		strings.slice memory s = secret.toSlice();
 		strings.slice memory delim = ' '.toSlice();
 		string[] memory parts = new string[](strings.count(s, delim) + 1);
-		for (uint i = 0; i < parts.length; i++) {
+		uint256 partsLen = parts.length;
+		for (uint i; i < partsLen; i++) {
 			parts[i] = strings.toString(strings.split(s, delim));
 		}
 
-		require(parts.length > 0, 'Secret value could not be extracted from clearSecret');
+		require(parts.length != 0, 'Secret value could not be extracted from clearSecret');
 
 		// Assuming here that there is only one space.
 		return parts[1];
@@ -234,10 +236,11 @@ contract Flippening is InteractsWithDEX {
 	function expire(uint id) public payable gracePassed(id) notSettled(id) {
 		IERC20 token = IERC20(flips[id].token);
 
-		bool creatorWon = false;
+		bool creatorWon;
 		address fundsReceiver = flips[id].guesser;
+		uint256 len = (bytes(flips[id].guess).length
 
-		if (bytes(flips[id].guess).length == 0) {
+		if len == 0) {
 			creatorWon = true;
 			fundsReceiver = flips[id].creator;
 		}
