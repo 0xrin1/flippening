@@ -182,7 +182,8 @@ contract Flippening is InteractsWithDEX {
 		strings.slice memory s = secret.toSlice();
 		strings.slice memory delim = ' '.toSlice();
 		string[] memory parts = new string[](strings.count(s, delim) + 1);
-		for (uint i = 0; i < parts.length; i++) {
+		uint256 partsLen = parts.length;
+		for (uint i = 0; i < partsLen; i++) {
 			parts[i] = strings.toString(strings.split(s, delim));
 		}
 
@@ -237,8 +238,9 @@ contract Flippening is InteractsWithDEX {
 
 		bool creatorWon = false;
 		address fundsReceiver = flips[id].guesser;
+		uint256 len = (bytes(flips[id].guess).length
 
-		if (bytes(flips[id].guess).length == 0) {
+		if len == 0) {
 			creatorWon = true;
 			fundsReceiver = flips[id].creator;
 		}
