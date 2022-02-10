@@ -187,7 +187,7 @@ contract Flippening is InteractsWithDEX {
 			parts[i] = strings.toString(strings.split(s, delim));
 		}
 
-		require(parts.length > 0, 'Secret value could not be extracted from clearSecret');
+		require(parts.length != 0, 'Secret value could not be extracted from clearSecret');
 
 		// Assuming here that there is only one space.
 		return parts[1];
